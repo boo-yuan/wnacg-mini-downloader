@@ -12,8 +12,15 @@ ENV/
 env.bak/
 venv.bak/
 
-# Project specific
+# PyInstaller build files
+build/
+dist/
+*.spec
+
+# Project specific / runtime
 app.log
+config.json
+download/
 download_info.json
 [未完成]_*
 *.7z

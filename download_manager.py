@@ -25,9 +25,6 @@ class DownloadManager:
             t = threading.Thread(target=self._worker_loop, daemon=True)
             t.start()
             self.workers.append(t)
-            
-        t_speed = threading.Thread(target=self._speed_updater_loop, daemon=True)
-        t_speed.start()
 
     def update_workers(self):
         target_workers = getattr(self.app, 'concurrent_comics', 2)
@@ -40,26 +37,6 @@ class DownloadManager:
             for _ in range(self.max_workers - target_workers):
                 self.queue.put(None)
         self.max_workers = target_workers
-            
-    def _speed_updater_loop(self):
-        last_bytes = self.downloaded_bytes
-        while True:
-            time.sleep(1)
-            current_bytes = self.downloaded_bytes
-            speed = current_bytes - last_bytes
-            last_bytes = current_bytes
-            
-            speed_str = "0 B/s"
-            if speed > 0:
-                if speed < 1024:
-                    speed_str = f"{speed} B/s"
-                elif speed < 1024 * 1024:
-                    speed_str = f"{speed/1024:.1f} KB/s"
-                else:
-                    speed_str = f"{speed/(1024*1024):.1f} MB/s"
-                    
-            if hasattr(self.app, 'speed_label') and self.app.speed_label and self.app.speed_label.winfo_exists():
-                self.app.after(0, lambda s=speed_str: self.app.speed_label.configure(text=f"总速度: {s}"))
 
     def sync_disk_state(self):
         base_dir = self.app.download_path

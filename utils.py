@@ -11,10 +11,17 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image
 
+import sys
+
+def get_app_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
 # ==========================================
 # 1. 设置日志 (Logging Setup)
 # ==========================================
-LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app.log")
+LOG_FILE = os.path.join(get_app_dir(), "app.log")
 logger = logging.getLogger("wnacg_app")
 logger.setLevel(logging.DEBUG)
 handler = RotatingFileHandler(LOG_FILE, maxBytes=1*1024*1024, backupCount=1, encoding='utf-8')
@@ -35,7 +42,7 @@ def get_proxies(proxy_mode, proxy_ip, proxy_port):
 
 def get_unfinished_dir(title, base_path=None):
     if not base_path:
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        base_path = get_app_dir()
     base = re.sub(r'[\\/*?:"<>|]', '_', title).strip()
     if base.startswith("[未完成]_"):
         base = base[len("[未完成]_"):]

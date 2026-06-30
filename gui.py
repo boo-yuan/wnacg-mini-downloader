@@ -6,7 +6,7 @@ import tkinter as tk
 
 import customtkinter as ctk
 
-from utils import logger, search_wnacg, download_thumbnail, delete_task_state
+from utils import logger, search_wnacg, download_thumbnail, delete_task_state, get_app_dir
 from download_manager import DownloadManager
 
 def setup_autohide_scrollbar(ctk_scrollable_frame):
@@ -311,7 +311,7 @@ class ModernApp(ctk.CTk):
         self.current_query = ""
         self.is_searching = False
         
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_app_dir()
         self.download_path = os.path.join(base_dir, "download")
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path, exist_ok=True)
@@ -336,7 +336,52 @@ class ModernApp(ctk.CTk):
         self.bind("<FocusIn>", self.on_focus_in)
         
         self.download_manager.sync_disk_state()
+        self._start_disk_status_watcher()
         
+    def _start_disk_status_watcher(self):
+        def watcher_loop():
+            import re
+            import os
+            import time
+            import threading
+            while True:
+                time.sleep(2)
+                if getattr(self, 'is_searching', False): continue
+                if not hasattr(self, 'current_search_items'): continue
+                
+                try:
+                    for aid, info in list(self.current_search_items.items()):
+                        btn = info.get('list_btn')
+                        if not btn or not btn.winfo_exists(): continue
+                        
+                        item = info['data']
+                        task_id = f"task_{aid}"
+                        
+                        if task_id in self.download_manager.tasks:
+                            info['last_disk_exists'] = None
+                            continue
+                            
+                        base_title = re.sub(r'[\\/*?:"<>|]', '_', item['title']).strip()
+                        if base_title.startswith("[未完成]_"):
+                            base_title = base_title[len("[未完成]_"):]
+                        completed_dir = os.path.join(self.download_path, base_title)
+                        
+                        exists = os.path.exists(completed_dir)
+                        last_exists = info.get('last_disk_exists')
+                        
+                        if exists != last_exists:
+                            info['last_disk_exists'] = exists
+                            if exists:
+                                self.download_manager.update_list_button_state(btn, "下载完成")
+                            else:
+                                self.download_manager.update_list_button_state(btn, "一键下载")
+                                self.after(0, lambda b=btn, t=task_id, i=item, p=info['proxies']: b.configure(command=lambda inner_b=b: self.trigger_download(t, i, inner_b, p)))
+                except Exception:
+                    pass
+                    
+        import threading
+        threading.Thread(target=watcher_loop, daemon=True).start()
+
     def on_focus_in(self, event):
         if event.widget == self:
             if hasattr(self, 'download_manager'):
@@ -511,8 +556,6 @@ class ModernApp(ctk.CTk):
         header_frame_c.grid_columnconfigure(0, weight=1)
         
         ctk.CTkLabel(header_frame_c, text="任务队列", font=("Microsoft YaHei", 18, "bold"), text_color=self.color_text_primary).grid(row=0, column=0, sticky="w")
-        self.speed_label = ctk.CTkLabel(header_frame_c, text="总速度: 0 B/s", font=("Microsoft YaHei", 14, "bold"), text_color=self.color_accent, width=150, anchor="e")
-        self.speed_label.grid(row=0, column=1, sticky="e")
         
         self.queue_frame = ctk.CTkScrollableFrame(self.frame_c, corner_radius=8, fg_color="transparent", bg_color="transparent")
         self.queue_frame.grid(row=1, column=0, padx=5, pady=(0, 10), sticky="nsew")
