@@ -41,6 +41,11 @@ class SettingsWindow(ctk.CTkToplevel):
         super().__init__(parent)
         self.title("全局设置")
         self.resizable(False, False)
+        
+        icon_path = os.path.join(get_app_dir(), 'icon.ico')
+        if os.path.exists(icon_path):
+            try: self.iconbitmap(icon_path)
+            except: pass
         self.attributes("-topmost", True)
         self.parent = parent
         self.configure(fg_color=self.parent.color_bg)
@@ -283,6 +288,11 @@ class ModernApp(ctk.CTk):
         self.title("Wnacg Mini Downloader")
         self.geometry("850x950")
         self.minsize(800, 800)
+        
+        icon_path = os.path.join(get_app_dir(), 'icon.ico')
+        if os.path.exists(icon_path):
+            try: self.iconbitmap(icon_path)
+            except: pass
         
         self.color_bg = ("#F2F2F7", "#000000")
         self.color_frame = ("#FFFFFF", "#1C1C1E")
