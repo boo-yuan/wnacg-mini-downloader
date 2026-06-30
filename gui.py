@@ -6,7 +6,7 @@ import tkinter as tk
 
 import customtkinter as ctk
 
-from utils import logger, search_wnacg, download_thumbnail, delete_task_state, get_app_dir
+from utils import logger, search_wnacg, download_thumbnail, delete_task_state, get_app_dir, get_resource_path
 from download_manager import DownloadManager
 
 def setup_autohide_scrollbar(ctk_scrollable_frame):
@@ -42,9 +42,9 @@ class SettingsWindow(ctk.CTkToplevel):
         self.title("全局设置")
         self.resizable(False, False)
         
-        icon_path = os.path.join(get_app_dir(), 'icon.ico')
+        icon_path = get_resource_path('icon.ico')
         if os.path.exists(icon_path):
-            try: self.iconbitmap(icon_path)
+            try: self.after(200, lambda: self.iconbitmap(icon_path))
             except: pass
         self.attributes("-topmost", True)
         self.parent = parent
@@ -289,7 +289,7 @@ class ModernApp(ctk.CTk):
         self.geometry("850x950")
         self.minsize(800, 800)
         
-        icon_path = os.path.join(get_app_dir(), 'icon.ico')
+        icon_path = get_resource_path('icon.ico')
         if os.path.exists(icon_path):
             try: self.iconbitmap(icon_path)
             except: pass
