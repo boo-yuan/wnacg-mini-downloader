@@ -18,6 +18,7 @@ dist/
 *.spec
 
 # Project specific / runtime
+RELEASE_NOTES.md
 app.log
 config.json
 download/
