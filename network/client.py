@@ -47,13 +47,19 @@ class AsyncNetworkClient:
                         k, v = chunk.strip().split('=', 1)
                         cookies[k] = v
                         
-            self.client = httpx.AsyncClient(
-                proxy=proxy_url, 
-                headers=self.default_headers, 
-                cookies=cookies,
-                follow_redirects=True, 
-                timeout=15.0
-            )
+            kwargs = {
+                "headers": self.default_headers,
+                "cookies": cookies,
+                "follow_redirects": True,
+                "timeout": 15.0
+            }
+            if proxy_url:
+                kwargs["proxy"] = proxy_url
+            else:
+                # Explicitly disable proxy auto-detection from system environment
+                kwargs["mounts"] = {"http://": None, "https://": None}
+                
+            self.client = httpx.AsyncClient(**kwargs)
         return self.client
 
     async def fetch_text(self, url, headers=None, timeout=10.0, retries=1):
@@ -65,9 +71,9 @@ class AsyncNetworkClient:
                 resp.raise_for_status()
                 return resp.text
             except Exception as e:
-                logger.error(f"Failed fetching {url} on attempt {attempt+1}: {e}")
+                logger.error(f"Failed fetching {url} on attempt {attempt+1}: {repr(e)}")
                 if attempt == retries - 1:
-                    raise NetworkError(f"Request failed: {e}")
+                    raise NetworkError(f"Request failed: {repr(e)}")
         return ""
 
     async def get_client(self):

@@ -193,8 +193,10 @@ class SearchPanel(ctk.CTkFrame):
             import asyncio
             asyncio.run_coroutine_threadsafe(self._load_image_task(item['img_url'], img_label), download_manager.loop)
             
-        title_label = ctk.CTkLabel(item_frame, text=item['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left", wraplength=320)
-        title_label.grid(row=0, column=1, padx=0, pady=(8, 2), sticky="nw")
+        title_wrapper = ctk.CTkFrame(item_frame, fg_color="transparent", height=22)
+        title_wrapper.grid(row=0, column=1, padx=0, pady=(8, 2), sticky="ew")
+        title_label = ctk.CTkLabel(title_wrapper, text=item['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left")
+        title_label.place(x=0, y=0, relwidth=1.0)
         
         count_label = ctk.CTkLabel(item_frame, text=item['count'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
         count_label.grid(row=1, column=1, padx=0, pady=0, sticky="nw")
