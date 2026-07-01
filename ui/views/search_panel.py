@@ -170,20 +170,20 @@ class SearchPanel(ctk.CTkFrame):
         item_frame.grid_rowconfigure(2, weight=1)
         
         img_label = ctk.CTkLabel(item_frame, text="Loading", width=56, height=76, fg_color='transparent', text_color=self.colors['text_secondary'], corner_radius=4)
-        img_label.grid(row=0, column=0, rowspan=3, padx=(12, 16), pady=12)
+        img_label.grid(row=0, column=0, rowspan=3, padx=(12, 16), pady=8)
         
         if item['img_url']:
             import asyncio
             asyncio.run_coroutine_threadsafe(self._load_image_task(item['img_url'], img_label), download_manager.loop)
             
         title_label = ctk.CTkLabel(item_frame, text=item['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left", wraplength=320)
-        title_label.grid(row=0, column=1, padx=0, pady=(12, 4), sticky="nw")
+        title_label.grid(row=0, column=1, padx=0, pady=(8, 2), sticky="nw")
         
         count_label = ctk.CTkLabel(item_frame, text=item['count'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
         count_label.grid(row=1, column=1, padx=0, pady=0, sticky="nw")
         
         btn = ctk.CTkButton(item_frame, text="一键下载", font=self.fonts['small'], fg_color=self.colors['btn_primary'], hover_color=self.colors['btn_primary_hover'], text_color=self.colors['text_on_primary'], width=72, height=28, corner_radius=4)
-        btn.grid(row=2, column=1, padx=(0, 12), pady=(4, 12), sticky="se")
+        btn.grid(row=2, column=1, padx=(0, 12), pady=(2, 8), sticky="se")
         
         if not item['aid']:
             btn.configure(state="disabled", text="无法解析AID")

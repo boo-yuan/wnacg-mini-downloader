@@ -55,13 +55,13 @@ class QueuePanel(ctk.CTkFrame):
         item_frame.grid_columnconfigure(0, weight=1)
         
         lbl_title = ctk.CTkLabel(item_frame, text=task_data['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left")
-        lbl_title.grid(row=0, column=0, padx=12, pady=(12, 0), sticky="nw")
+        lbl_title.grid(row=0, column=0, padx=12, pady=(8, 0), sticky="nw")
         
         lbl_status = ctk.CTkLabel(item_frame, text=task_data['status'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
-        lbl_status.grid(row=1, column=0, padx=12, pady=(4, 0), sticky="nw")
+        lbl_status.grid(row=1, column=0, padx=12, pady=(2, 0), sticky="nw")
         
         progressbar = ctk.CTkProgressBar(item_frame, progress_color=self.colors['btn_primary'], fg_color=self.colors['bg'], height=6)
-        progressbar.grid(row=2, column=0, padx=12, pady=(8, 12), sticky="ew")
+        progressbar.grid(row=2, column=0, padx=12, pady=(4, 8), sticky="ew")
         progressbar.set(task_data.get('progress', 0.0))
         
         self.ui_tasks[task_data['id']] = {

@@ -90,7 +90,7 @@ class Extractor:
                     info_text = info_col.text.strip()
                     m_c = re.search(r'(\d+)\s*[张張]', info_text)
                     m_d = re.search(r'(\d{4}-\d{2}-\d{2})', info_text)
-                    c_str = f"{m_c.group(1)}P" if m_c else ""
+                    c_str = f"{m_c.group(1)} 图" if m_c else ""
                     d_str = m_d.group(1) if m_d else ""
                     count = f"{c_str} | {d_str}".strip(' |')
                     
