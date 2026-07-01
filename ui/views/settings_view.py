@@ -234,6 +234,26 @@ class SettingsWindow(ctk.CTkToplevel):
         self.on_api_mode_change(config_manager.api_domain_mode)
         self.on_proxy_mode_change(config_manager.proxy_mode)
         
+        # Set logical size first so CustomTkinter can apply DPI scaling
+        self.geometry("540x640")
+        self.update_idletasks()
+        
+        # Now winfo_* returns actual physical pixels on the screen
+        parent_x = self.parent.winfo_rootx()
+        parent_y = self.parent.winfo_rooty()
+        parent_w = self.parent.winfo_width()
+        parent_h = self.parent.winfo_height()
+        
+        my_w = self.winfo_width()
+        my_h = self.winfo_height()
+        
+        # Calculate physical center coordinate relative to the parent
+        x = parent_x + (parent_w - my_w) // 2
+        y = parent_y + (parent_h - my_h) // 2
+        
+        # Set physical screen position
+        self.geometry(f"+{x}+{y}")
+        
     def on_api_mode_change(self, value):
         if value == "默认":
             for child in self.api_custom_frame.winfo_children():

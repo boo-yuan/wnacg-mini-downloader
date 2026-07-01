@@ -54,10 +54,8 @@ class QueuePanel(ctk.CTkFrame):
         item_frame.pack(fill="x", padx=8, pady=4)
         item_frame.grid_columnconfigure(0, weight=1)
         
-        title_wrapper = ctk.CTkFrame(item_frame, fg_color="transparent", height=22)
-        title_wrapper.grid(row=0, column=0, padx=12, pady=(8, 0), sticky="ew")
-        lbl_title = ctk.CTkLabel(title_wrapper, text=task_data['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left")
-        lbl_title.place(x=0, y=0, relwidth=1.0)
+        lbl_title = ctk.CTkLabel(item_frame, text=task_data['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left", wraplength=260)
+        lbl_title.grid(row=0, column=0, padx=12, pady=(8, 0), sticky="nw")
         
         lbl_status = ctk.CTkLabel(item_frame, text=task_data['status'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
         lbl_status.grid(row=1, column=0, padx=12, pady=(2, 0), sticky="nw")

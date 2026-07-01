@@ -154,7 +154,12 @@ class DownloaderApp(ctk.CTk):
             logger.error(f"Cannot open log file: {e}")
 
     def open_settings(self):
-        SettingsWindow(self)
+        if hasattr(self, 'settings_window') and self.settings_window is not None and self.settings_window.winfo_exists():
+            self.settings_window.lift()
+            self.settings_window.focus()
+        else:
+            from ui.views.settings_view import SettingsWindow
+            self.settings_window = SettingsWindow(self)
 
     def run(self):
         self.mainloop()
