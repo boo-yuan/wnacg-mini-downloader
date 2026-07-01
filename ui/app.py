@@ -28,13 +28,13 @@ class DownloaderApp(ctk.CTk):
         self.app_colors = {
             'bg': ("#F3F4F6", "#000000"),
             'frame': ("#FFFFFF", "#1C1C1E"),
-            'item_default': ("#F8FAFC", "#2C2C2E"),
+            'item_default': ("#F1F5F9", "#2C2C2E"),
             'item_selected': ("#DBEAFE", "#1E3A8A"),
             'item_border_selected': ("#2563EB", "#3B82F6"),
             'btn_primary': ("#3B82F6", "#0A84FF"),
             'btn_primary_hover': ("#2563EB", "#007AFF"),
-            'btn_secondary': ("#E5E7EB", "#333333"),
-            'btn_secondary_hover': ("#D1D5DB", "#444444"),
+            'btn_secondary': ("#D1D5DB", "#3A3A3C"),
+            'btn_secondary_hover': ("#9CA3AF", "#4C4C50"),
             'btn_warning': ("#F59E0B", "#D97706"),
             'btn_disabled': ("#E5E5EA", "#3A3A3C"),
             'text_primary': ("#0F172A", "#F1F5F9"),
@@ -82,7 +82,7 @@ class DownloaderApp(ctk.CTk):
         path_frame.grid(row=0, column=0, padx=16, pady=8, sticky="w")
         
         ctk.CTkLabel(path_frame, text="保存路径:", font=self.app_fonts['body_bold'], text_color=self.app_colors['text_primary']).pack(side="left", padx=(0, 8))
-        self.path_entry = ctk.CTkEntry(path_frame, width=280, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=0, corner_radius=8, text_color=self.app_colors['text_primary'])
+        self.path_entry = ctk.CTkEntry(path_frame, width=280, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=1, border_color=self.app_colors['btn_secondary'], corner_radius=8, text_color=self.app_colors['text_primary'])
         self.path_entry.pack(side="left", padx=(0, 16))
         self.path_entry.insert(0, config_manager.download_path)
         self.path_entry.bind('<Return>', lambda e: self.manual_path_update())

@@ -39,7 +39,7 @@ class SearchPanel(ctk.CTkFrame):
         search_frame.grid(row=1, column=0, padx=16, pady=8, sticky="ew")
         search_frame.grid_columnconfigure(0, weight=1)
         
-        self.search_entry = ctk.CTkEntry(search_frame, placeholder_text="输入漫画名称开始搜索...", height=40, font=self.fonts['body'], fg_color=self.colors['item_default'], border_width=0, corner_radius=8, text_color=self.colors['text_primary'])
+        self.search_entry = ctk.CTkEntry(search_frame, placeholder_text="输入漫画名称开始搜索...", height=40, font=self.fonts['body'], fg_color=self.colors['item_default'], border_width=1, border_color=self.colors['btn_secondary'], corner_radius=8, text_color=self.colors['text_primary'])
         self.search_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
         self.search_entry.bind('<Return>', lambda e: self.start_search(1))
         
