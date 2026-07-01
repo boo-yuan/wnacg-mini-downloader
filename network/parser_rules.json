@@ -1,0 +1,20 @@
+{
+  "search_page": {
+    "paginator_container": "div.f_left.paginator",
+    "paginator_links": "a",
+    "paginator_current": "span.thisclass",
+    "item_container": ["li.gallary_item", ".pic_box"],
+    "item_img": "img",
+    "item_title_a": "a[title]",
+    "item_any_a": "a",
+    "item_info_col": "div.info_col"
+  },
+  "index_page": {
+    "pic_box": "div.pic_box",
+    "paginator": "div.f_left.paginator",
+    "next_span": "span.next"
+  },
+  "view_page": {
+    "img_id": "picarea"
+  }
+}

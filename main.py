@@ -1,18 +1,26 @@
 import sys
-import os
+import ctypes
+from ui.app import DownloaderApp
+from core.logger import logger
 
-# 确保在导入其他模块之前，工作目录是正确的
-if getattr(sys, 'frozen', False):
-    sys.path.append(os.path.dirname(sys.executable))
-else:
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
-from gui import ModernApp
-from utils import logger
+def main():
+    try:
+        if sys.platform.startswith('win'):
+            try: ctypes.windll.shcore.SetProcessDpiAwareness(1)
+            except: pass
+            
+        app = DownloaderApp()
+        app.run()
+    except Exception as e:
+        logger.error(f"Application error: {e}", exc_info=True)
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
-    try:
-        app = ModernApp()
-        app.mainloop()
-    except Exception as e:
-        logger.exception("Application crashed: %s", e)
+    main()
