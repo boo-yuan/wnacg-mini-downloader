@@ -87,12 +87,11 @@ class ConfigManager:
                 'comic_rest_time': self.comic_rest_time,
                 'concurrent_images': self.concurrent_images,
                 'image_rest_time': self.image_rest_time,
+                'download_path': self.download_path,
                 'download_format': self.download_format,
                 'use_original_filename': self.use_original_filename,
                 'user_cookie': self.user_cookie
             }
-            if self.download_path != os.path.join(self.base_dir, "download"):
-                config['download_path'] = self.download_path
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
             event_bus.emit("CONFIG_UPDATED", self)

@@ -4,8 +4,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 def get_app_dir():
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+    if getattr(sys, 'frozen', False) or "__compiled__" in globals():
+        return os.path.dirname(os.path.abspath(sys.argv[0]))
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 LOG_FILE = os.path.join(get_app_dir(), "app.log")
