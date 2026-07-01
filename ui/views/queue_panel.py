@@ -124,6 +124,12 @@ class QueuePanel(ctk.CTkFrame):
             self.last_clicked_task_id = None
             
         self.drag_start_selected = set(self.selected_task_ids)
+        self.drag_item_coords = {}
+        for k, ui_obj in self.ui_tasks.items():
+            f = ui_obj['frame']
+            if f and f.winfo_exists():
+                self.drag_item_coords[k] = (f.winfo_rooty(), f.winfo_height())
+                
         self.update_task_selection_ui()
 
     def _bind_click_recursive(self, widget, task_id):
@@ -165,6 +171,12 @@ class QueuePanel(ctk.CTkFrame):
             self.last_clicked_task_id = task_id
             
         self.drag_start_selected = set(self.selected_task_ids)
+        self.drag_item_coords = {}
+        for k, ui_obj in self.ui_tasks.items():
+            f = ui_obj['frame']
+            if f and f.winfo_exists():
+                self.drag_item_coords[k] = (f.winfo_rooty(), f.winfo_height())
+                
         self.update_task_selection_ui()
 
     def on_drag_motion(self, event):
@@ -176,11 +188,7 @@ class QueuePanel(ctk.CTkFrame):
         is_ctrl = (event.state & 0x0004) != 0
         new_selection = set(self.drag_start_selected) if is_ctrl else set()
         
-        for t_id, ui_obj in self.ui_tasks.items():
-            frame = ui_obj['frame']
-            if not frame.winfo_exists(): continue
-            fy = frame.winfo_rooty()
-            fh = frame.winfo_height()
+        for t_id, (fy, fh) in getattr(self, 'drag_item_coords', {}).items():
             
             if (fy + fh >= y1) and (fy <= y2):
                 new_selection.add(t_id)

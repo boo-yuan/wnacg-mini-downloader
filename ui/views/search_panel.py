@@ -342,6 +342,12 @@ class SearchPanel(ctk.CTkFrame):
             self.last_clicked_search_id = aid
             
         self.search_drag_start_selected = set(self.selected_search_ids)
+        self.search_drag_item_coords = {}
+        for k, item_info in self.current_search_items.items():
+            f = item_info['ui_frame']
+            if f and f.winfo_exists():
+                self.search_drag_item_coords[k] = (f.winfo_rooty(), f.winfo_height())
+                
         self.update_search_selection_ui()
 
     def on_search_drag_motion(self, event):
@@ -353,11 +359,7 @@ class SearchPanel(ctk.CTkFrame):
         is_ctrl = (event.state & 0x0004) != 0
         new_selection = set(self.search_drag_start_selected) if is_ctrl else set()
         
-        for aid, item_info in self.current_search_items.items():
-            frame = item_info['ui_frame']
-            if not frame or not frame.winfo_exists(): continue
-            fy = frame.winfo_rooty()
-            fh = frame.winfo_height()
+        for aid, (fy, fh) in getattr(self, 'search_drag_item_coords', {}).items():
             
             if (fy + fh >= y1) and (fy <= y2):
                 new_selection.add(aid)
