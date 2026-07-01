@@ -13,6 +13,16 @@ class AsyncNetworkClient:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
         }
         self.client = None
+        
+        from core.event_bus import event_bus
+        event_bus.subscribe("CONFIG_UPDATED", self.on_config_updated)
+
+    def on_config_updated(self, config):
+        if self.client and not self.client.is_closed:
+            import asyncio
+            # We must close the old client cleanly
+            asyncio.run_coroutine_threadsafe(self.client.aclose(), asyncio.get_event_loop())
+        self.client = None
 
     def get_proxy(self):
         proxy_mode = config_manager.proxy_mode
@@ -29,7 +39,21 @@ class AsyncNetworkClient:
     def _get_client(self):
         if self.client is None or self.client.is_closed:
             proxy_url = self.get_proxy()
-            self.client = httpx.AsyncClient(proxy=proxy_url, headers=self.default_headers, follow_redirects=True, timeout=15.0)
+            
+            cookies = {}
+            if config_manager.user_cookie:
+                for chunk in config_manager.user_cookie.split(';'):
+                    if '=' in chunk:
+                        k, v = chunk.strip().split('=', 1)
+                        cookies[k] = v
+                        
+            self.client = httpx.AsyncClient(
+                proxy=proxy_url, 
+                headers=self.default_headers, 
+                cookies=cookies,
+                follow_redirects=True, 
+                timeout=15.0
+            )
         return self.client
 
     async def fetch_text(self, url, headers=None, timeout=10.0, retries=1):

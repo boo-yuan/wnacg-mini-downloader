@@ -208,6 +208,16 @@ class SettingsWindow(ctk.CTkToplevel):
         cb_naming = ctk.CTkCheckBox(naming_frame, text="使用图片原文件名", font=self.parent.app_fonts['body'], variable=self.naming_var, fg_color=self.parent.app_colors['btn_primary'], text_color=self.parent.app_colors['text_primary'])
         cb_naming.grid(row=0, column=0, pady=8, sticky="w")
         
+        # 4. 用户账号
+        ctk.CTkLabel(self, text="用户账号", font=self.parent.app_fonts['h2'], text_color=self.parent.app_colors['text_primary']).pack(pady=(24, 8), padx=24, anchor="w")
+        cookie_frame = ctk.CTkFrame(self, fg_color=self.parent.app_colors['frame'], border_width=0, corner_radius=8)
+        cookie_frame.pack(fill="x", padx=32, pady=(0, 16))
+        
+        ctk.CTkLabel(cookie_frame, text="账户 Cookie (可选):", font=self.parent.app_fonts['body'], text_color=self.parent.app_colors['text_primary']).pack(side="left", padx=(16, 8), pady=8)
+        self.cookie_entry = ctk.CTkEntry(cookie_frame, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=1, border_color=self.parent.app_colors['item_default'])
+        self.cookie_entry.pack(side="left", padx=(0, 16), pady=8, fill="x", expand=True)
+        self.cookie_entry.insert(0, config_manager.user_cookie)
+        
         self.save_btn = ctk.CTkButton(self, text="保存全局设置", height=40, font=self.parent.app_fonts['body_bold'], fg_color=self.parent.app_colors['btn_primary'], hover_color=self.parent.app_colors['btn_primary_hover'], text_color=self.parent.app_colors['text_on_primary'], corner_radius=8, command=self.save_settings)
         self.save_btn.pack(pady=32)
         
@@ -251,6 +261,7 @@ class SettingsWindow(ctk.CTkToplevel):
         
         config_manager.download_format = self.format_var.get()
         config_manager.use_original_filename = self.naming_var.get()
+        config_manager.user_cookie = self.cookie_entry.get().strip()
         
         config_manager.save_config()
         self.destroy()

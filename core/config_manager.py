@@ -36,6 +36,8 @@ class ConfigManager:
         self.download_format = "jpg"
         self.use_original_filename = True
         
+        self.user_cookie = ""
+        
         self.load_config()
 
     def load_config(self):
@@ -69,6 +71,7 @@ class ConfigManager:
                         self.download_path = config['download_path']
                     self.download_format = config.get('download_format', self.download_format)
                     self.use_original_filename = config.get('use_original_filename', self.use_original_filename)
+                    self.user_cookie = config.get('user_cookie', self.user_cookie)
         except Exception as e:
             logger.error(f"Error loading config: {e}")
 
@@ -86,7 +89,8 @@ class ConfigManager:
                 'image_rest_time': self.image_rest_time,
                 'download_path': self.download_path,
                 'download_format': self.download_format,
-                'use_original_filename': self.use_original_filename
+                'use_original_filename': self.use_original_filename,
+                'user_cookie': self.user_cookie
             }
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
