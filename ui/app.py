@@ -53,6 +53,7 @@ class DownloaderApp(ctk.CTk):
         
         self.title("WNACG Mini Downloader")
         self.geometry("950x1000")
+        self.minsize(800, 600)
         self.configure(fg_color=self.app_colors['bg'])
         
         icon_path = get_resource_path('icon.ico')

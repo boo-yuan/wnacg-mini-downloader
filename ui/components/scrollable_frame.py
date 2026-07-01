@@ -6,7 +6,10 @@ class AutoHideScrollableFrame(ctk.CTkScrollableFrame):
         self._setup_autohide()
 
     def _setup_autohide(self):
+        self._check_job = None
+        
         def check_scrollbar():
+            self._check_job = None
             canvas = self._parent_canvas
             bbox = canvas.bbox("all")
             if not bbox: return
@@ -22,7 +25,9 @@ class AutoHideScrollableFrame(ctk.CTkScrollableFrame):
                     self._scrollbar.grid()
 
         def on_configure(*args):
-            self.after(10, check_scrollbar)
+            if self._check_job is not None:
+                self.after_cancel(self._check_job)
+            self._check_job = self.after(50, check_scrollbar)
                     
         canvas = self._parent_canvas
         content_frame = self._parent_frame
