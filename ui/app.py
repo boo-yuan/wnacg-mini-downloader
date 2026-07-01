@@ -75,11 +75,11 @@ class DownloaderApp(ctk.CTk):
         
         # --- Top Bar ---
         self.frame_a = ctk.CTkFrame(self, corner_radius=16, fg_color=self.app_colors['frame'])
-        self.frame_a.grid(row=0, column=0, columnspan=2, padx=24, pady=(24, 8), sticky="nsew")
+        self.frame_a.grid(row=0, column=0, columnspan=2, padx=16, pady=(16, 8), sticky="nsew")
         self.frame_a.grid_columnconfigure(0, weight=1)
         
         path_frame = ctk.CTkFrame(self.frame_a, fg_color="transparent")
-        path_frame.grid(row=0, column=0, padx=16, pady=16, sticky="w")
+        path_frame.grid(row=0, column=0, padx=16, pady=8, sticky="w")
         
         ctk.CTkLabel(path_frame, text="保存路径:", font=self.app_fonts['body_bold'], text_color=self.app_colors['text_primary']).pack(side="left", padx=(0, 8))
         self.path_entry = ctk.CTkEntry(path_frame, width=280, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=0, corner_radius=8, text_color=self.app_colors['text_primary'])
@@ -87,20 +87,20 @@ class DownloaderApp(ctk.CTk):
         self.path_entry.insert(0, config_manager.download_path)
         self.path_entry.bind('<Return>', lambda e: self.manual_path_update())
         
-        ctk.CTkButton(path_frame, text="浏览...", width=64, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], hover_color=self.app_colors['btn_secondary_hover'], text_color=self.app_colors['text_primary'], corner_radius=8, command=self.choose_download_path).pack(side="left")
+        ctk.CTkButton(path_frame, text="浏览", width=64, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], hover_color=self.app_colors['btn_secondary_hover'], text_color=self.app_colors['text_primary'], corner_radius=8, command=self.choose_download_path).pack(side="left")
         
-        ctk.CTkButton(self.frame_a, text="查看日志", width=96, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], text_color=self.app_colors['text_primary'], hover_color=self.app_colors['btn_secondary_hover'], corner_radius=8, command=self.open_log).grid(row=0, column=1, padx=8, pady=16)
-        ctk.CTkButton(self.frame_a, text="全局设置", width=96, height=32, font=self.app_fonts['body_bold'], fg_color=self.app_colors['btn_primary'], text_color=self.app_colors['text_on_primary'], hover_color=self.app_colors['btn_primary_hover'], corner_radius=8, command=self.open_settings).grid(row=0, column=2, padx=16, pady=16)
+        ctk.CTkButton(self.frame_a, text="日志", width=80, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], text_color=self.app_colors['text_primary'], hover_color=self.app_colors['btn_secondary_hover'], corner_radius=8, command=self.open_log).grid(row=0, column=1, padx=8, pady=8)
+        ctk.CTkButton(self.frame_a, text="设置", width=80, height=32, font=self.app_fonts['body_bold'], fg_color=self.app_colors['btn_primary'], text_color=self.app_colors['text_on_primary'], hover_color=self.app_colors['btn_primary_hover'], corner_radius=8, command=self.open_settings).grid(row=0, column=2, padx=(8, 16), pady=8)
         
         # --- Main Content ---
         # Left: Search
         self.search_panel = SearchPanel(self, self.app_colors, self.app_fonts)
-        self.search_panel.grid(row=1, column=0, padx=(24, 8), pady=(8, 24), sticky="nsew")
+        self.search_panel.grid(row=1, column=0, padx=(16, 8), pady=(8, 16), sticky="nsew")
         self.search_panel.configure(fg_color=self.app_colors['frame'], corner_radius=16)
         
         # Right: Queue
         right_container = ctk.CTkFrame(self, fg_color="transparent")
-        right_container.grid(row=1, column=1, padx=(8, 24), pady=(8, 24), sticky="nsew")
+        right_container.grid(row=1, column=1, padx=(8, 16), pady=(8, 16), sticky="nsew")
         right_container.grid_rowconfigure(0, weight=1)
         right_container.grid_columnconfigure(0, weight=1)
         

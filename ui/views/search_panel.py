@@ -33,10 +33,10 @@ class SearchPanel(ctk.CTkFrame):
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
-        ctk.CTkLabel(self, text="资源探索", font=self.fonts['h2'], text_color=self.colors['text_primary']).grid(row=0, column=0, pady=(24, 0), padx=24, sticky="w")
+        ctk.CTkLabel(self, text="资源探索", font=self.fonts['h2'], text_color=self.colors['text_primary']).grid(row=0, column=0, pady=(16, 0), padx=16, sticky="w")
         
         search_frame = ctk.CTkFrame(self, fg_color="transparent")
-        search_frame.grid(row=1, column=0, padx=24, pady=16, sticky="ew")
+        search_frame.grid(row=1, column=0, padx=16, pady=8, sticky="ew")
         search_frame.grid_columnconfigure(0, weight=1)
         
         self.search_entry = ctk.CTkEntry(search_frame, placeholder_text="输入漫画名称开始搜索...", height=40, font=self.fonts['body'], fg_color=self.colors['item_default'], border_width=0, corner_radius=8, text_color=self.colors['text_primary'])
@@ -53,7 +53,7 @@ class SearchPanel(ctk.CTkFrame):
         self.search_btn.grid(row=0, column=3)
         
         self.list_frame = AutoHideScrollableFrame(self, corner_radius=8, fg_color="transparent", bg_color="transparent")
-        self.list_frame.grid(row=2, column=0, padx=16, pady=0, sticky="nsew")
+        self.list_frame.grid(row=2, column=0, padx=8, pady=0, sticky="nsew")
         
         if hasattr(self.list_frame, '_parent_canvas'):
             self.list_frame._parent_canvas.bind("<Button-1>", self.on_search_empty_click)
@@ -165,25 +165,25 @@ class SearchPanel(ctk.CTkFrame):
 
     def create_list_item(self, item):
         item_frame = ctk.CTkFrame(self.list_frame, corner_radius=8, fg_color=self.colors['item_default'], border_width=2, border_color=self.colors['bg'])
-        item_frame.pack(fill="x", padx=4, pady=4)
+        item_frame.pack(fill="x", padx=8, pady=4)
         item_frame.grid_columnconfigure(1, weight=1)
         item_frame.grid_rowconfigure(2, weight=1)
         
         img_label = ctk.CTkLabel(item_frame, text="Loading", width=56, height=76, fg_color='transparent', text_color=self.colors['text_secondary'], corner_radius=4)
-        img_label.grid(row=0, column=0, rowspan=3, padx=(8, 16), pady=8)
+        img_label.grid(row=0, column=0, rowspan=3, padx=(12, 16), pady=12)
         
         if item['img_url']:
             import asyncio
             asyncio.run_coroutine_threadsafe(self._load_image_task(item['img_url'], img_label), download_manager.loop)
             
         title_label = ctk.CTkLabel(item_frame, text=item['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left", wraplength=320)
-        title_label.grid(row=0, column=1, padx=0, pady=(8, 4), sticky="nw")
+        title_label.grid(row=0, column=1, padx=0, pady=(12, 4), sticky="nw")
         
         count_label = ctk.CTkLabel(item_frame, text=item['count'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
         count_label.grid(row=1, column=1, padx=0, pady=0, sticky="nw")
         
         btn = ctk.CTkButton(item_frame, text="一键下载", font=self.fonts['small'], fg_color=self.colors['btn_primary'], hover_color=self.colors['btn_primary_hover'], text_color=self.colors['text_on_primary'], width=72, height=28, corner_radius=4)
-        btn.grid(row=2, column=1, padx=(0, 16), pady=(4, 8), sticky="se")
+        btn.grid(row=2, column=1, padx=(0, 12), pady=(4, 12), sticky="se")
         
         if not item['aid']:
             btn.configure(state="disabled", text="无法解析AID")

@@ -26,13 +26,13 @@ class QueuePanel(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         
         header_frame_c = ctk.CTkFrame(self, fg_color="transparent")
-        header_frame_c.grid(row=0, column=0, pady=(24, 8), padx=24, sticky="ew")
+        header_frame_c.grid(row=0, column=0, pady=(16, 8), padx=16, sticky="ew")
         header_frame_c.grid_columnconfigure(0, weight=1)
         
         ctk.CTkLabel(header_frame_c, text="任务队列", font=self.fonts['h2'], text_color=self.colors['text_primary']).grid(row=0, column=0, sticky="w")
         
         self.queue_frame = AutoHideScrollableFrame(self, corner_radius=8, fg_color="transparent", bg_color="transparent")
-        self.queue_frame.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
+        self.queue_frame.grid(row=1, column=0, padx=8, pady=(0, 16), sticky="nsew")
         
         if hasattr(self.queue_frame, '_parent_canvas'):
             self.queue_frame._parent_canvas.bind("<Button-1>", self.on_empty_click)
@@ -51,17 +51,17 @@ class QueuePanel(ctk.CTkFrame):
 
     def add_task_to_ui(self, task_data):
         item_frame = ctk.CTkFrame(self.queue_frame, corner_radius=8, fg_color=self.colors['item_default'], border_width=2, border_color=self.colors['bg'])
-        item_frame.pack(fill="x", padx=4, pady=4)
+        item_frame.pack(fill="x", padx=8, pady=4)
         item_frame.grid_columnconfigure(0, weight=1)
         
         lbl_title = ctk.CTkLabel(item_frame, text=task_data['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left")
-        lbl_title.grid(row=0, column=0, padx=8, pady=(8, 0), sticky="nw")
+        lbl_title.grid(row=0, column=0, padx=12, pady=(12, 0), sticky="nw")
         
         lbl_status = ctk.CTkLabel(item_frame, text=task_data['status'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
-        lbl_status.grid(row=1, column=0, padx=8, pady=(4, 0), sticky="nw")
+        lbl_status.grid(row=1, column=0, padx=12, pady=(4, 0), sticky="nw")
         
         progressbar = ctk.CTkProgressBar(item_frame, progress_color=self.colors['btn_primary'], fg_color=self.colors['bg'], height=6)
-        progressbar.grid(row=2, column=0, padx=8, pady=(4, 8), sticky="ew")
+        progressbar.grid(row=2, column=0, padx=12, pady=(8, 12), sticky="ew")
         progressbar.set(task_data.get('progress', 0.0))
         
         self.ui_tasks[task_data['id']] = {
