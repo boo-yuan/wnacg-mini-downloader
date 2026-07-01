@@ -144,9 +144,14 @@ class SearchPanel(ctk.CTkFrame):
         
     async def _search_task(self, query, page):
         results, total_pages, err = await search_service.search(query, page)
-        if not err:
+        if not err and query == self.current_query:
             self.search_cache[page] = (results, total_pages, err)
         self.after(0, self.update_list_ui, results, total_pages, err)
+        
+    async def _precache_task(self, query, page):
+        results, total_pages, err = await search_service.search(query, page)
+        if not err and query == self.current_query:
+            self.search_cache[page] = (results, total_pages, err)
         
     def update_list_ui(self, results, total_pages, err):
         self.is_searching = False
@@ -289,6 +294,20 @@ class SearchPanel(ctk.CTkFrame):
                                      command=lambda: self.start_search(min(self.total_pages, self.current_page + 1)),
                                      state="normal" if self.current_page < self.total_pages else "disabled")
             next_btn.pack(side="left", padx=4)
+            
+            # Launch pre-cache tasks for visible pages
+            visible_pages = set()
+            if start_page > 1:
+                visible_pages.add(1)
+            for p in range(start_page, end_page + 1):
+                visible_pages.add(p)
+            if end_page < self.total_pages:
+                visible_pages.add(self.total_pages)
+                
+            import asyncio
+            for p in visible_pages:
+                if p not in self.search_cache and p != self.current_page:
+                    asyncio.run_coroutine_threadsafe(self._precache_task(self.current_query, p), download_manager.loop)
 
     # Event Handlers
     def on_task_progress(self, task_id, status_text, progress_val):
