@@ -21,6 +21,7 @@ class SearchPanel(ctk.CTkFrame):
         self.selected_search_ids = set()
         self.last_clicked_search_id = None
         self.search_drag_start_selected = set()
+        self.search_cache = {}
         
         self.setup_ui()
         event_bus.subscribe("TASK_PROGRESS", self.on_task_progress)
@@ -119,8 +120,17 @@ class SearchPanel(ctk.CTkFrame):
         
         download_manager.sync_disk_state()
         
-        self.current_query = query
+        if query != self.current_query:
+            self.search_cache.clear()
+            self.current_query = query
+            
         self.current_page = page
+        
+        if page in self.search_cache:
+            results, total_pages, err = self.search_cache[page]
+            self.update_list_ui(results, total_pages, err)
+            return
+            
         self.is_searching = True
         self.search_btn.configure(text="加载中...", state="disabled")
         
@@ -134,6 +144,8 @@ class SearchPanel(ctk.CTkFrame):
         
     async def _search_task(self, query, page):
         results, total_pages, err = await search_service.search(query, page)
+        if not err:
+            self.search_cache[page] = (results, total_pages, err)
         self.after(0, self.update_list_ui, results, total_pages, err)
         
     def update_list_ui(self, results, total_pages, err):
@@ -238,7 +250,7 @@ class SearchPanel(ctk.CTkFrame):
             
         if self.current_query and self.total_pages > 0:
             prev_btn = ctk.CTkButton(self.pagination_frame, text="◀", width=36, height=32, font=("Arial", 14, "bold"),
-                                     fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['bg'],
+                                     fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['btn_secondary_hover'],
                                      command=lambda: self.start_search(max(1, self.current_page - 1)),
                                      state="normal" if self.current_page > 1 else "disabled")
             prev_btn.pack(side="left", padx=4)
@@ -248,7 +260,7 @@ class SearchPanel(ctk.CTkFrame):
             
             if start_page > 1:
                 p_first = ctk.CTkButton(self.pagination_frame, text="1", width=36, height=32, font=self.fonts['small'],
-                                       fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['bg'],
+                                       fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['btn_secondary_hover'],
                                        command=lambda: self.start_search(1))
                 p_first.pack(side="left", padx=4)
                 if start_page > 2:
@@ -260,7 +272,7 @@ class SearchPanel(ctk.CTkFrame):
                                           fg_color=self.colors['btn_primary'], text_color=self.colors['text_on_primary'], hover_color=self.colors['btn_primary_hover'])
                 else:
                     p_btn = ctk.CTkButton(self.pagination_frame, text=str(p), width=36, height=32, font=self.fonts['small'],
-                                          fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['bg'],
+                                          fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['btn_secondary_hover'],
                                           command=lambda p=p: self.start_search(p))
                 p_btn.pack(side="left", padx=4)
                 
@@ -268,12 +280,12 @@ class SearchPanel(ctk.CTkFrame):
                 if end_page < self.total_pages - 1:
                     ctk.CTkLabel(self.pagination_frame, text="...", font=self.fonts['small'], text_color=self.colors['text_secondary'], fg_color='transparent').pack(side="left", padx=4)
                 p_last = ctk.CTkButton(self.pagination_frame, text=str(self.total_pages), width=36, height=32, font=self.fonts['small'],
-                                       fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['bg'],
+                                       fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['btn_secondary_hover'],
                                        command=lambda: self.start_search(self.total_pages))
                 p_last.pack(side="left", padx=4)
             
             next_btn = ctk.CTkButton(self.pagination_frame, text="▶", width=36, height=32, font=("Arial", 14, "bold"),
-                                     fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['bg'],
+                                     fg_color=self.colors['item_default'], text_color=self.colors['text_primary'], hover_color=self.colors['btn_secondary_hover'],
                                      command=lambda: self.start_search(min(self.total_pages, self.current_page + 1)),
                                      state="normal" if self.current_page < self.total_pages else "disabled")
             next_btn.pack(side="left", padx=4)
