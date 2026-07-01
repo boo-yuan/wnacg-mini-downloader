@@ -29,12 +29,24 @@ class AsyncNetworkClient:
         if proxy_mode == "系统代理" or proxy_mode == "system":
             p = urllib.request.getproxies()
             if not p: return None
-            return p.get('http') or p.get('https')
+            raw_proxy = p.get('http') or p.get('https')
         elif proxy_mode == "自定义" or proxy_mode == "custom":
-            p_url = f"http://{config_manager.custom_proxy_ip}:{config_manager.custom_proxy_port}"
-            return p_url
+            raw_proxy = f"{config_manager.custom_proxy_ip}:{config_manager.custom_proxy_port}"
         else:
             return None
+            
+        if not raw_proxy:
+            return None
+            
+        # httpx strict schema handling: https:// proxy implies a TLS-encrypted proxy connection.
+        # However, urllib often returns https://127.0.0.1:7890 for Windows system proxies,
+        # which are actually plain HTTP proxies. We must normalize it to http://.
+        raw_proxy = str(raw_proxy).lower().strip()
+        if raw_proxy.startswith('https://'):
+            return 'http://' + raw_proxy[8:]
+        elif not raw_proxy.startswith('http://') and not raw_proxy.startswith('socks'):
+            return 'http://' + raw_proxy
+        return raw_proxy
 
     def _get_client(self):
         if self.client is None or self.client.is_closed:
