@@ -1,6 +1,8 @@
 import threading
 import json
+import asyncio
 from network.client import network_client
+from services.download_manager import download_manager
 from core.logger import logger
 from core.event_bus import event_bus
 from network.extractor import extractor
@@ -11,12 +13,12 @@ class UpdateService:
         self.rules_url = "https://raw.githubusercontent.com/boo-yuan/WNACG-Mini-Downloader/main/network/parser_rules.json"
         
     def check_for_updates(self):
-        threading.Thread(target=self._check_rules_update, daemon=True).start()
+        asyncio.run_coroutine_threadsafe(self._check_rules_update(), download_manager.loop)
         
-    def _check_rules_update(self):
+    async def _check_rules_update(self):
         try:
             logger.info("Checking for parser rules update...")
-            text = network_client.fetch_text(self.rules_url, timeout=10)
+            text = await network_client.fetch_text(self.rules_url, timeout=10)
             if not text:
                 return
             new_rules = json.loads(text)

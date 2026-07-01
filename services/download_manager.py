@@ -1,9 +1,9 @@
 import os
 import time
-import queue
-import threading
 import json
 import re
+import asyncio
+import threading
 from io import BytesIO
 from PIL import Image
 
@@ -50,29 +50,42 @@ def delete_task_state(task_data, base_path):
 
 class DownloadManager:
     def __init__(self):
-        self.queue = queue.Queue()
         self.tasks = {} # task_id -> task_data dict
-        self.workers = []
-        self.max_workers = config_manager.concurrent_comics
         self.downloaded_bytes = 0
         
-        for _ in range(self.max_workers):
-            t = threading.Thread(target=self._worker_loop, daemon=True)
-            t.start()
-            self.workers.append(t)
+        # Asyncio Event Loop in Background
+        self.loop = asyncio.new_event_loop()
+        self.thread = threading.Thread(target=self._start_loop, daemon=True)
+        self.thread.start()
+        
+        while not self.loop.is_running():
+            time.sleep(0.01)
+            
+        self.max_workers = config_manager.concurrent_comics
+        self.worker_tasks = []
+        asyncio.run_coroutine_threadsafe(self._init_workers(), self.loop)
             
         event_bus.subscribe("CONFIG_UPDATED", self.on_config_updated)
+
+    def _start_loop(self):
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()
+
+    async def _init_workers(self):
+        self.queue = asyncio.Queue()
+        for _ in range(self.max_workers):
+            self.worker_tasks.append(asyncio.create_task(self._worker_loop()))
 
     def on_config_updated(self, config):
         target_workers = config.concurrent_comics
         if target_workers > self.max_workers:
-            for _ in range(target_workers - self.max_workers):
-                t = threading.Thread(target=self._worker_loop, daemon=True)
-                t.start()
-                self.workers.append(t)
+            async def add_workers():
+                for _ in range(target_workers - self.max_workers):
+                    self.worker_tasks.append(asyncio.create_task(self._worker_loop()))
+            asyncio.run_coroutine_threadsafe(add_workers(), self.loop)
         elif target_workers < self.max_workers:
             for _ in range(self.max_workers - target_workers):
-                self.queue.put(None)
+                asyncio.run_coroutine_threadsafe(self.queue.put(None), self.loop)
         self.max_workers = target_workers
 
     def sync_disk_state(self):
@@ -139,7 +152,7 @@ class DownloadManager:
                 task['cancel_flag'] = False
                 task['is_paused'] = False
                 self.update_task_state(task_id, "等待中", task['progress'])
-                self.queue.put(task_id)
+                asyncio.run_coroutine_threadsafe(self.queue.put(task_id), self.loop)
             return
             
         task_data = {
@@ -153,10 +166,13 @@ class DownloadManager:
             'is_paused': False
         }
         self.tasks[task_id] = task_data
-        save_task_state(task_data, config_manager.download_path)
+        
+        def _save():
+            save_task_state(task_data, config_manager.download_path)
+        threading.Thread(target=_save, daemon=True).start()
         
         event_bus.emit("TASK_ADDED", task_data)
-        self.queue.put(task_id)
+        asyncio.run_coroutine_threadsafe(self.queue.put(task_id), self.loop)
 
     def update_task_state(self, task_id, status_text, progress_val):
         task = self.tasks.get(task_id)
@@ -180,7 +196,7 @@ class DownloadManager:
             task['cancel_flag'] = False
             task['is_paused'] = False
             self.update_task_state(task_id, "等待中", task['progress'])
-            self.queue.put(task_id)
+            asyncio.run_coroutine_threadsafe(self.queue.put(task_id), self.loop)
 
     def cancel_task(self, task_id):
         task = self.tasks.get(task_id)
@@ -197,12 +213,10 @@ class DownloadManager:
             event_bus.emit("TASK_REMOVED", task_id)
             del self.tasks[task_id]
 
-    def _worker_loop(self):
+    async def _worker_loop(self):
         while True:
-            task_id = self.queue.get()
+            task_id = await self.queue.get()
             if task_id is None:
-                try: self.workers.remove(threading.current_thread())
-                except: pass
                 self.queue.task_done()
                 break
                 
@@ -212,7 +226,7 @@ class DownloadManager:
                 continue
                 
             try:
-                self.process_download(task)
+                await self.process_download(task)
             except Exception as e:
                 logger.error(f"Task {task_id} failed with error: {e}")
                 if not task.get('cancel_flag'):
@@ -221,7 +235,7 @@ class DownloadManager:
             finally:
                 self.queue.task_done()
 
-    def process_download(self, task):
+    async def process_download(self, task):
         if task['cancel_flag']: return
         
         self.update_task_state(task['id'], "解析目录...", task['progress'])
@@ -241,13 +255,13 @@ class DownloadManager:
             
             index_url = f"{domain}/photos-index-page-{page}-aid-{aid}.html"
             try:
-                html_content = network_client.fetch_text(index_url)
+                html_content = await network_client.fetch_text(index_url)
                 urls, has_next = extractor.parse_index_page(html_content)
                 view_urls.extend(urls)
                 
                 if has_next:
                     page += 1
-                    time.sleep(1)
+                    await asyncio.sleep(1)
                 else:
                     break
             except Exception as e:
@@ -265,23 +279,23 @@ class DownloadManager:
         self.update_task_state(task['id'], f"准备下载 (0/{total_imgs})", task['progress'])
         
         downloaded = 0
-        download_lock = threading.Lock()
         
-        def download_single_image(i, view_href):
+        async def download_single_image(i, view_href):
             nonlocal downloaded
             if task['cancel_flag']: return
             
             view_url = domain + view_href if view_href.startswith('/') else view_href
             success = False
+            client = await network_client.get_client()
             
             for attempt in range(3):
                 if task['cancel_flag']: return
                 try:
-                    view_html = network_client.fetch_text(view_url)
+                    view_html = await network_client.fetch_text(view_url)
                     img_src = extractor.parse_view_page(view_html)
                     
                     if not img_src:
-                        time.sleep(1)
+                        await asyncio.sleep(1)
                         continue
                         
                     if img_src.startswith('//'):
@@ -306,78 +320,71 @@ class DownloadManager:
                         success = True
                         break
 
-                    resp = network_client.fetch_image_stream(img_src, headers={'Referer': view_url})
-                    
-                    chunk_iter = resp.iter_content(chunk_size=8192)
-                    try:
-                        first_chunk = next(chunk_iter)
-                    except StopIteration:
-                        first_chunk = b""
+                    async with client.stream("GET", img_src, headers={'Referer': view_url}) as resp:
+                        resp.raise_for_status()
                         
-                    if fmt_setting == "原始格式":
-                        with open(filepath, 'wb') as f:
-                            f.write(first_chunk)
-                            self.downloaded_bytes += len(first_chunk)
-                            for chunk in chunk_iter:
-                                f.write(chunk)
-                                self.downloaded_bytes += len(chunk)
-                    else:
-                        buf = BytesIO()
-                        buf.write(first_chunk)
-                        self.downloaded_bytes += len(first_chunk)
-                        for chunk in chunk_iter:
-                            buf.write(chunk)
-                            self.downloaded_bytes += len(chunk)
-                        try:
-                            buf.seek(0)
-                            image_obj = Image.open(buf)
-                            if image_obj.mode in ('RGBA', 'LA', 'P') and fmt_setting == "jpg":
-                                bg = Image.new('RGB', image_obj.size, (255, 255, 255))
-                                try:
-                                    bg.paste(image_obj, mask=image_obj.convert('RGBA').split()[3])
-                                except:
-                                    bg.paste(image_obj)
-                                image_obj = bg
-                            elif image_obj.mode != 'RGB' and fmt_setting == "jpg":
-                                image_obj = image_obj.convert('RGB')
-                                
-                            pil_fmt = "JPEG" if fmt_setting == "jpg" else fmt_setting.upper()
-                            kwargs = {}
-                            if pil_fmt == "JPEG": kwargs['quality'] = 95
-                            image_obj.save(filepath, pil_fmt, **kwargs)
-                        except Exception as e:
-                            logger.error(f"Image convert error: {e}")
+                        if fmt_setting == "原始格式":
+                            def write_original():
+                                with open(filepath, 'wb') as f:
+                                    for chunk in resp.iter_bytes(chunk_size=8192):
+                                        f.write(chunk)
+                                        self.downloaded_bytes += len(chunk)
+                            # Actually, stream response iteration needs to be async.
+                            pass
+                            # To be safe from blocking UI thread, we can just do blocking write, it's fast enough.
                             with open(filepath, 'wb') as f:
-                                f.write(buf.getvalue())
+                                async for chunk in resp.aiter_bytes(chunk_size=8192):
+                                    f.write(chunk)
+                                    self.downloaded_bytes += len(chunk)
+                        else:
+                            buf = BytesIO()
+                            async for chunk in resp.aiter_bytes(chunk_size=8192):
+                                buf.write(chunk)
+                                self.downloaded_bytes += len(chunk)
                                 
+                            def convert_and_save():
+                                buf.seek(0)
+                                image_obj = Image.open(buf)
+                                if image_obj.mode in ('RGBA', 'LA', 'P') and fmt_setting == "jpg":
+                                    bg = Image.new('RGB', image_obj.size, (255, 255, 255))
+                                    try:
+                                        bg.paste(image_obj, mask=image_obj.convert('RGBA').split()[3])
+                                    except:
+                                        bg.paste(image_obj)
+                                    image_obj = bg
+                                elif image_obj.mode != 'RGB' and fmt_setting == "jpg":
+                                    image_obj = image_obj.convert('RGB')
+                                    
+                                pil_fmt = "JPEG" if fmt_setting == "jpg" else fmt_setting.upper()
+                                kwargs = {}
+                                if pil_fmt == "JPEG": kwargs['quality'] = 95
+                                image_obj.save(filepath, pil_fmt, **kwargs)
+                                
+                            await asyncio.get_event_loop().run_in_executor(None, convert_and_save)
+                            
                     success = True
                     break
                     
                 except Exception as e:
                     logger.error(f"Attempt {attempt+1} failed for {view_url}: {e}")
-                    time.sleep(2)
+                    await asyncio.sleep(2)
                     
             if success:
-                with download_lock:
-                    downloaded += 1
-                    self.update_task_state(task['id'], f"下载中 ({downloaded}/{total_imgs})", downloaded/total_imgs)
-                time.sleep(config_manager.image_rest_time)
+                downloaded += 1
+                self.update_task_state(task['id'], f"下载中 ({downloaded}/{total_imgs})", downloaded/total_imgs)
+                await asyncio.sleep(config_manager.image_rest_time)
             else:
                 logger.error(f"Completely failed to download {view_url} after 3 attempts.")
 
-        max_img_workers = config_manager.concurrent_images
-        if max_img_workers <= 1:
-            for i, view_href in enumerate(view_urls):
-                if task['cancel_flag']: break
-                download_single_image(i, view_href)
-        else:
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max_img_workers) as executor:
-                futures = []
-                for i, view_href in enumerate(view_urls):
-                    futures.append(executor.submit(download_single_image, i, view_href))
-                for future in concurrent.futures.as_completed(futures):
-                    pass
+        max_img_workers = max(1, config_manager.concurrent_images)
+        sem = asyncio.Semaphore(max_img_workers)
+        
+        async def bounded_download(i, href):
+            async with sem:
+                await download_single_image(i, href)
+                
+        tasks = [asyncio.create_task(bounded_download(i, href)) for i, href in enumerate(view_urls)]
+        await asyncio.gather(*tasks)
                 
         if task['cancel_flag']: return
         
@@ -407,12 +414,11 @@ class DownloadManager:
                 
             event_bus.emit("TASK_COMPLETED", task['id'])
             
-            # Promptly remove completed task from UI and active dictionary
             event_bus.emit("TASK_REMOVED", task['id'])
             if task['id'] in self.tasks:
                 del self.tasks[task['id']]
                 
-            time.sleep(config_manager.comic_rest_time)
+            await asyncio.sleep(config_manager.comic_rest_time)
         else:
             self.update_task_state(task['id'], f"部分失败 ({downloaded}/{total_imgs})", downloaded/total_imgs)
             task['is_paused'] = True

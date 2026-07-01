@@ -129,10 +129,11 @@ class SearchPanel(ctk.CTkFrame):
             
         ctk.CTkLabel(self.list_frame, text="正在连接服务器...", font=self.fonts['body'], text_color=self.colors['text_secondary'], fg_color='transparent').pack(pady=40)
         
-        threading.Thread(target=self._search_thread, args=(query, page), daemon=True).start()
+        import asyncio
+        asyncio.run_coroutine_threadsafe(self._search_task(query, page), download_manager.loop)
         
-    def _search_thread(self, query, page):
-        results, total_pages, err = search_service.search(query, page)
+    async def _search_task(self, query, page):
+        results, total_pages, err = await search_service.search(query, page)
         self.after(0, self.update_list_ui, results, total_pages, err)
         
     def update_list_ui(self, results, total_pages, err):
@@ -172,7 +173,8 @@ class SearchPanel(ctk.CTkFrame):
         img_label.grid(row=0, column=0, rowspan=3, padx=(8, 16), pady=8)
         
         if item['img_url']:
-            threading.Thread(target=self._load_image_thread, args=(item['img_url'], img_label), daemon=True).start()
+            import asyncio
+            asyncio.run_coroutine_threadsafe(self._load_image_task(item['img_url'], img_label), download_manager.loop)
             
         title_label = ctk.CTkLabel(item_frame, text=item['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left", wraplength=320)
         title_label.grid(row=0, column=1, padx=0, pady=(8, 4), sticky="nw")
@@ -222,8 +224,8 @@ class SearchPanel(ctk.CTkFrame):
         download_manager.add_task(task_id, item['aid'], item['title'], item['domain'])
         self._set_btn_state(btn, "等待中")
 
-    def _load_image_thread(self, url, label):
-        image = network_client.download_thumbnail(url)
+    async def _load_image_task(self, url, label):
+        image = await network_client.download_thumbnail(url)
         if image and label.winfo_exists():
             ctk_img = ctk.CTkImage(light_image=image, dark_image=image, size=(56, 76))
             self.after(0, lambda: label.configure(image=ctk_img, text=""))

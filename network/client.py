@@ -1,37 +1,43 @@
 import urllib.request
-import requests
+import httpx
+import asyncio
 from io import BytesIO
 from PIL import Image
 from core.logger import logger
 from core.config_manager import config_manager
 from core.exceptions import NetworkError
 
-class NetworkClient:
+class AsyncNetworkClient:
     def __init__(self):
         self.default_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
         }
+        self.client = None
 
-    def get_proxies(self):
+    def get_proxy(self):
         proxy_mode = config_manager.proxy_mode
         if proxy_mode == "系统代理" or proxy_mode == "system":
-            return urllib.request.getproxies()
+            p = urllib.request.getproxies()
+            if not p: return None
+            return p.get('http') or p.get('https')
         elif proxy_mode == "自定义" or proxy_mode == "custom":
             p_url = f"http://{config_manager.custom_proxy_ip}:{config_manager.custom_proxy_port}"
-            return {"http": p_url, "https": p_url}
+            return p_url
         else:
-            return {"http": "", "https": ""}
+            return None
 
-    def fetch_text(self, url, headers=None, timeout=10, retries=1):
-        req_headers = self.default_headers.copy()
-        if headers:
-            req_headers.update(headers)
-            
-        proxies = self.get_proxies()
-        
+    def _get_client(self):
+        if self.client is None or self.client.is_closed:
+            proxy_url = self.get_proxy()
+            self.client = httpx.AsyncClient(proxy=proxy_url, headers=self.default_headers, follow_redirects=True, timeout=15.0)
+        return self.client
+
+    async def fetch_text(self, url, headers=None, timeout=10.0, retries=1):
+        req_headers = headers if headers else {}
+        client = self._get_client()
         for attempt in range(retries):
             try:
-                resp = requests.get(url, headers=req_headers, proxies=proxies, timeout=timeout)
+                resp = await client.get(url, headers=req_headers, timeout=timeout)
                 resp.raise_for_status()
                 return resp.text
             except Exception as e:
@@ -39,21 +45,15 @@ class NetworkClient:
                 if attempt == retries - 1:
                     raise NetworkError(f"Request failed: {e}")
         return ""
-        
-    def fetch_image_stream(self, url, headers=None, timeout=15):
-        req_headers = self.default_headers.copy()
-        if headers:
-            req_headers.update(headers)
-        proxies = self.get_proxies()
-        
-        resp = requests.get(url, headers=req_headers, proxies=proxies, stream=True, timeout=timeout)
-        resp.raise_for_status()
-        return resp
 
-    def download_thumbnail(self, url, referer="https://www.wnacg.com/"):
+    async def get_client(self):
+        return self._get_client()
+
+    async def download_thumbnail(self, url, referer="https://www.wnacg.com/"):
         headers = {'Referer': referer}
+        client = self._get_client()
         try:
-            resp = requests.get(url, headers=self.default_headers, proxies=self.get_proxies(), timeout=5)
+            resp = await client.get(url, headers=headers, timeout=5.0)
             resp.raise_for_status()
             image = Image.open(BytesIO(resp.content))
             return image
@@ -61,4 +61,4 @@ class NetworkClient:
             logger.error(f"Error downloading thumbnail {url}: {e}")
             return None
 
-network_client = NetworkClient()
+network_client = AsyncNetworkClient()

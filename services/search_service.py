@@ -7,7 +7,7 @@ from network.extractor import extractor
 DOMAINS = ['https://www.wnacg.com', 'https://www.wnacg.ru']
 
 class SearchService:
-    def search(self, query, page=1):
+    async def search(self, query, page=1):
         domains_to_try = DOMAINS
         if config_manager.api_domain_mode == "自定义" and config_manager.custom_api_domain:
             custom_domain = config_manager.custom_api_domain
@@ -19,7 +19,7 @@ class SearchService:
             url = f"{domain}/search/index.php?q={urllib.parse.quote(query)}&m=&syn=yes&f=_all&s=create_time_DESC&p={page}"
             logger.info(f"Fetching: {url}")
             try:
-                html_content = network_client.fetch_text(url, timeout=10)
+                html_content = await network_client.fetch_text(url, timeout=10)
                 logger.info(f"Success fetching from {domain}")
                 results, total_pages = extractor.parse_search_results(html_content, domain)
                 return results, total_pages, None
