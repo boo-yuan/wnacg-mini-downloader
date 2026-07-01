@@ -222,8 +222,19 @@ class QueuePanel(ctk.CTkFrame):
             self.selected_task_ids = {task_id}
             self.last_clicked_task_id = task_id
             self.update_task_selection_ui()
-            
-        menu = tk.Menu(self, tearoff=0, font=("Microsoft YaHei", 11))
+        mode_idx = 1 if ctk.get_appearance_mode().lower() == "dark" else 0
+        get_color = lambda c: c[mode_idx] if isinstance(c, (list, tuple)) else c
+        menu = tk.Menu(
+            self, 
+            tearoff=0, 
+            font=("Microsoft YaHei", 10),
+            bg=get_color(self.colors['frame']),
+            fg=get_color(self.colors['text_primary']),
+            activebackground=get_color(self.colors['item_selected']),
+            activeforeground=get_color(self.colors['text_primary']),
+            bd=1,
+            relief="solid"
+        )
         menu.add_command(label="全选队列", command=self.select_all_tasks)
         menu.add_command(label="取消选中", command=self.clear_task_selection)
         menu.add_separator()

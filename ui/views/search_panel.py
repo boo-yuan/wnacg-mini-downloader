@@ -44,10 +44,10 @@ class SearchPanel(ctk.CTkFrame):
         self.search_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
         self.search_entry.bind('<Return>', lambda e: self.start_search(1))
         
-        self.paste_btn = ctk.CTkButton(search_frame, text="📋", width=40, height=40, font=("Arial", 16), fg_color=self.colors['item_default'], text_color=self.colors['text_secondary'], hover_color=self.colors['btn_secondary_hover'], corner_radius=8, command=self._quick_paste)
+        self.paste_btn = ctk.CTkButton(search_frame, text="📋", width=40, height=40, font=("Arial", 16), fg_color=self.colors['item_default'], text_color=self.colors['text_secondary'], hover_color=self.colors['item_selected'], corner_radius=8, command=self._quick_paste)
         self.paste_btn.grid(row=0, column=1, padx=(0, 8))
         
-        self.clear_btn = ctk.CTkButton(search_frame, text="✕", width=40, height=40, font=("Arial", 16), fg_color=self.colors['item_default'], text_color=self.colors['text_secondary'], hover_color=self.colors['btn_secondary_hover'], corner_radius=8, command=lambda: self.search_entry.delete(0, 'end'))
+        self.clear_btn = ctk.CTkButton(search_frame, text="✕", width=40, height=40, font=("Arial", 16), fg_color=self.colors['item_default'], text_color=self.colors['text_secondary'], hover_color=self.colors['item_selected'], corner_radius=8, command=lambda: self.search_entry.delete(0, 'end'))
         self.clear_btn.grid(row=0, column=2, padx=(0, 16))
         
         self.search_btn = ctk.CTkButton(search_frame, text="搜索", width=88, height=40, font=self.fonts['body_bold'], fg_color=self.colors['btn_primary'], hover_color=self.colors['btn_primary_hover'], text_color=self.colors['text_on_primary'], corner_radius=8, command=lambda: self.start_search(1))
@@ -422,8 +422,19 @@ class SearchPanel(ctk.CTkFrame):
             self.selected_search_ids = {aid}
             self.last_clicked_search_id = aid
             self.update_search_selection_ui()
-            
-        menu = tk.Menu(self, tearoff=0, font=("Microsoft YaHei", 11))
+        mode_idx = 1 if ctk.get_appearance_mode().lower() == "dark" else 0
+        get_color = lambda c: c[mode_idx] if isinstance(c, (list, tuple)) else c
+        menu = tk.Menu(
+            self, 
+            tearoff=0, 
+            font=("Microsoft YaHei", 10),
+            bg=get_color(self.colors['frame']),
+            fg=get_color(self.colors['text_primary']),
+            activebackground=get_color(self.colors['item_selected']),
+            activeforeground=get_color(self.colors['text_primary']),
+            bd=1,
+            relief="solid"
+        )
         menu.add_command(label="全选列表", command=self.select_all_search)
         menu.add_command(label="取消选中", command=self.clear_search_selection)
         menu.add_separator()

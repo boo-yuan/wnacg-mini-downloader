@@ -26,14 +26,21 @@ class SettingsWindow(ctk.CTkToplevel):
         self.parent = parent
         self.configure(fg_color=self.parent.app_colors['bg'])
         
+        # Bottom frame for save button
+        bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
+        bottom_frame.pack(side="bottom", fill="x", pady=(8, 16))
+        
+        self.save_btn = ctk.CTkButton(bottom_frame, text="保存设置", height=40, font=self.parent.app_fonts['body_bold'], fg_color=self.parent.app_colors['btn_primary'], hover_color=self.parent.app_colors['btn_primary_hover'], text_color=self.parent.app_colors['text_on_primary'], corner_radius=8, command=self.save_settings)
+        self.save_btn.pack()
+        
         # 内部使用 ScrollableFrame 防止内容过多溢出
         self.scroll_frame = ctk.CTkScrollableFrame(self, fg_color="transparent", width=520, height=600)
-        self.scroll_frame.pack(fill="both", expand=True, padx=8, pady=8)
+        self.scroll_frame.pack(fill="both", expand=True, padx=8, pady=(8, 0))
         
         # -----------------------------
         # 一、网络与账户 (Network & Account)
         # -----------------------------
-        ctk.CTkLabel(self.scroll_frame, text="网络与账户", font=self.parent.app_fonts['h2'], text_color=self.parent.app_colors['text_primary']).pack(pady=(16, 8), padx=16, anchor="w")
+        ctk.CTkLabel(self.scroll_frame, text="网络与账户", font=self.parent.app_fonts['h2'], text_color=self.parent.app_colors['text_primary']).pack(pady=(16, 4), padx=16, anchor="w")
         
         # 1. API域名
         ctk.CTkLabel(self.scroll_frame, text="API域名", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).pack(pady=(8, 4), padx=24, anchor="w")
@@ -46,21 +53,21 @@ class SettingsWindow(ctk.CTkToplevel):
             fg_color=self.parent.app_colors['item_default'],
             selected_color=self.parent.app_colors['item_selected'],
             selected_hover_color=self.parent.app_colors['item_selected'],
-            unselected_color=self.parent.app_colors['item_default'],
-            unselected_hover_color=self.parent.app_colors['bg'],
+            unselected_color=self.parent.app_colors['frame'],
+            unselected_hover_color=self.parent.app_colors['item_default'],
             text_color=self.parent.app_colors['text_primary']
         )
         self.api_seg.pack(side="left")
         
         self.api_custom_frame = ctk.CTkFrame(self.scroll_frame, fg_color=self.parent.app_colors['frame'], border_width=0, corner_radius=8)
-        self.api_custom_frame.pack(fill="x", padx=24, pady=(0, 16))
+        self.api_custom_frame.pack(fill="x", padx=24, pady=(0, 4))
         
-        ctk.CTkLabel(self.api_custom_frame, text="自定义API域名", font=self.parent.app_fonts['body']).pack(side="left", padx=16, pady=8)
-        self.api_entry = ctk.CTkEntry(self.api_custom_frame, width=180, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=0)
+        ctk.CTkLabel(self.api_custom_frame, text="自定义", font=self.parent.app_fonts['body']).pack(side="left", padx=16, pady=8)
+        self.api_entry = ctk.CTkEntry(self.api_custom_frame, width=180, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=1, border_color=self.parent.app_colors['item_default'])
         self.api_entry.pack(side="left", padx=8, pady=8, fill="x", expand=True)
         self.api_entry.insert(0, config_manager.custom_api_domain)
         
-        self.release_page_btn = ctk.CTkButton(self.api_custom_frame, text="打开发布页", width=88, font=self.parent.app_fonts['body_bold'], fg_color=self.parent.app_colors['btn_secondary'], text_color=self.parent.app_colors['text_primary'], hover_color=self.parent.app_colors['btn_secondary_hover'], corner_radius=8, command=lambda: __import__('webbrowser').open("https://wnacg01.link"))
+        self.release_page_btn = ctk.CTkButton(self.api_custom_frame, text="打开发布页", width=88, font=self.parent.app_fonts['body_bold'], fg_color=self.parent.app_colors['item_default'], text_color=self.parent.app_colors['text_primary'], hover_color=self.parent.app_colors['item_selected'], corner_radius=8, command=lambda: __import__('webbrowser').open("https://wnacg01.link"))
         self.release_page_btn.pack(side="right", padx=16, pady=8)
 
         # 2. 网络代理
@@ -74,17 +81,17 @@ class SettingsWindow(ctk.CTkToplevel):
             fg_color=self.parent.app_colors['item_default'],
             selected_color=self.parent.app_colors['item_selected'],
             selected_hover_color=self.parent.app_colors['item_selected'],
-            unselected_color=self.parent.app_colors['item_default'],
-            unselected_hover_color=self.parent.app_colors['bg'],
+            unselected_color=self.parent.app_colors['frame'],
+            unselected_hover_color=self.parent.app_colors['item_default'],
             text_color=self.parent.app_colors['text_primary']
         )
         self.proxy_seg.pack(side="left")
         
         self.proxy_custom_frame = ctk.CTkFrame(self.scroll_frame, fg_color=self.parent.app_colors['frame'], border_width=0, corner_radius=8)
-        self.proxy_custom_frame.pack(fill="x", padx=24, pady=(0, 16))
+        self.proxy_custom_frame.pack(fill="x", padx=24, pady=(0, 4))
         
         ctk.CTkLabel(self.proxy_custom_frame, text="http://", font=self.parent.app_fonts['body']).pack(side="left", padx=(16, 4), pady=8)
-        self.proxy_ip_entry = ctk.CTkEntry(self.proxy_custom_frame, width=160, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=0)
+        self.proxy_ip_entry = ctk.CTkEntry(self.proxy_custom_frame, width=160, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=1, border_color=self.parent.app_colors['item_default'])
         self.proxy_ip_entry.pack(side="left", padx=8, pady=8, fill="x", expand=True)
         self.proxy_ip_entry.insert(0, config_manager.custom_proxy_ip)
         
@@ -117,7 +124,7 @@ class SettingsWindow(ctk.CTkToplevel):
         # 3. 用户账号 (Cookie)
         ctk.CTkLabel(self.scroll_frame, text="用户账号 Cookie (可选)", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).pack(pady=(8, 4), padx=24, anchor="w")
         cookie_frame = ctk.CTkFrame(self.scroll_frame, fg_color=self.parent.app_colors['frame'], border_width=0, corner_radius=8)
-        cookie_frame.pack(fill="x", padx=24, pady=(0, 16))
+        cookie_frame.pack(fill="x", padx=24, pady=(0, 4))
         
         self.cookie_entry = ctk.CTkEntry(cookie_frame, font=self.parent.app_fonts['body'], fg_color="transparent", border_width=1, border_color=self.parent.app_colors['item_default'])
         self.cookie_entry.pack(side="left", padx=16, pady=8, fill="x", expand=True)
@@ -126,26 +133,30 @@ class SettingsWindow(ctk.CTkToplevel):
         # -----------------------------
         # 二、下载与任务 (Download Tasks)
         # -----------------------------
-        ctk.CTkLabel(self.scroll_frame, text="下载任务", font=self.parent.app_fonts['h2'], text_color=self.parent.app_colors['text_primary']).pack(pady=(24, 8), padx=16, anchor="w")
+        ctk.CTkLabel(self.scroll_frame, text="下载任务", font=self.parent.app_fonts['h2'], text_color=self.parent.app_colors['text_primary']).pack(pady=(16, 4), padx=16, anchor="w")
         
         # 1. 下载格式与命名
         format_naming_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        format_naming_frame.pack(fill="x", padx=24, pady=(0, 16))
+        format_naming_frame.pack(fill="x", padx=24, pady=(0, 8))
         
         ctk.CTkLabel(format_naming_frame, text="图片格式:", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).grid(row=0, column=0, pady=8, sticky="w")
+        
+        radio_frame = ctk.CTkFrame(format_naming_frame, fg_color="transparent")
+        radio_frame.grid(row=0, column=1, padx=(16, 0), sticky="w")
+        
         self.format_var = ctk.StringVar(value=config_manager.download_format)
         formats = ["jpg", "png", "webp", "原始格式"]
         for i, fmt in enumerate(formats):
-            rb = ctk.CTkRadioButton(format_naming_frame, text=fmt, font=self.parent.app_fonts['body'], variable=self.format_var, value=fmt, fg_color=self.parent.app_colors['btn_primary'], text_color=self.parent.app_colors['text_primary'])
-            rb.grid(row=0, column=i+1, padx=(16, 0), pady=8, sticky="w")
+            rb = ctk.CTkRadioButton(radio_frame, text=fmt, width=0, font=self.parent.app_fonts['body'], variable=self.format_var, value=fmt, fg_color=self.parent.app_colors['btn_primary'], text_color=self.parent.app_colors['text_primary'])
+            rb.pack(side="left", padx=(0, 16) if i < len(formats)-1 else 0)
             
         ctk.CTkLabel(format_naming_frame, text="文件命名:", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).grid(row=1, column=0, pady=8, sticky="w")
         self.naming_var = ctk.BooleanVar(value=config_manager.use_original_filename)
         cb_naming = ctk.CTkCheckBox(format_naming_frame, text="使用原文件名", font=self.parent.app_fonts['body'], variable=self.naming_var, fg_color=self.parent.app_colors['btn_primary'], text_color=self.parent.app_colors['text_primary'])
-        cb_naming.grid(row=1, column=1, columnspan=3, padx=(16, 0), pady=8, sticky="w")
+        cb_naming.grid(row=1, column=1, padx=(16, 0), pady=8, sticky="w")
         
         # 2. 并发与速度
-        ctk.CTkLabel(self.scroll_frame, text="并发速度", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).pack(pady=(8, 4), padx=24, anchor="w")
+        ctk.CTkLabel(self.scroll_frame, text="并发速度", font=self.parent.app_fonts['body_bold'], text_color=self.parent.app_colors['text_primary']).pack(pady=(4, 4), padx=24, anchor="w")
         
         def create_dual_ios_row(parent_frame, label1, val1, min1, max1, label2, val2, min2, max2):
             row = ctk.CTkFrame(parent_frame, fg_color="transparent")
@@ -224,35 +235,26 @@ class SettingsWindow(ctk.CTkToplevel):
         sep1.pack(fill="x", padx=(16, 0))
         
         self.entry_ci, self.entry_irt = create_dual_ios_row(speed_frame, "图片并发", config_manager.concurrent_images, 1, 50, "间隔(秒)", config_manager.image_rest_time, 0, 60)
-
-        # -----------------------------
-        # 底部保存按钮
-        # -----------------------------
-        self.save_btn = ctk.CTkButton(self.scroll_frame, text="保存设置", height=40, font=self.parent.app_fonts['body_bold'], fg_color=self.parent.app_colors['btn_primary'], hover_color=self.parent.app_colors['btn_primary_hover'], text_color=self.parent.app_colors['text_on_primary'], corner_radius=8, command=self.save_settings)
-        self.save_btn.pack(pady=24)
         
         self.on_api_mode_change(config_manager.api_domain_mode)
         self.on_proxy_mode_change(config_manager.proxy_mode)
         
-        # Set logical size first so CustomTkinter can apply DPI scaling
-        self.geometry("540x640")
+        # Center relative to parent window
         self.update_idletasks()
+        width = 540
+        height = 640
         
-        # Now winfo_* returns actual physical pixels on the screen
-        parent_x = self.parent.winfo_rootx()
-        parent_y = self.parent.winfo_rooty()
-        parent_w = self.parent.winfo_width()
-        parent_h = self.parent.winfo_height()
+        parent_x = self.parent.winfo_x()
+        parent_y = self.parent.winfo_y()
+        parent_width = self.parent.winfo_width()
+        parent_height = self.parent.winfo_height()
         
-        my_w = self.winfo_width()
-        my_h = self.winfo_height()
+        # When using geometry("+x+y") in customtkinter with DPI scaling,
+        # winfo_x() already properly accounts for the scaled window position.
+        x = parent_x + (parent_width - width) // 2
+        y = parent_y + (parent_height - height) // 2
         
-        # Calculate physical center coordinate relative to the parent
-        x = parent_x + (parent_w - my_w) // 2
-        y = parent_y + (parent_h - my_h) // 2
-        
-        # Set physical screen position
-        self.geometry(f"+{x}+{y}")
+        self.geometry(f"{width}x{height}+{x}+{y}")
         
     def on_api_mode_change(self, value):
         if value == "默认":

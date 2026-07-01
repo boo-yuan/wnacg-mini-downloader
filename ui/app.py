@@ -82,16 +82,16 @@ class DownloaderApp(ctk.CTk):
         path_frame = ctk.CTkFrame(self.frame_a, fg_color="transparent")
         path_frame.grid(row=0, column=0, padx=16, pady=8, sticky="w")
         
-        ctk.CTkLabel(path_frame, text="保存路径:", font=self.app_fonts['body_bold'], text_color=self.app_colors['text_primary']).pack(side="left", padx=(0, 8))
-        self.path_entry = ctk.CTkEntry(path_frame, width=280, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=1, border_color=self.app_colors['btn_secondary'], corner_radius=8, text_color=self.app_colors['text_primary'])
+        ctk.CTkLabel(path_frame, text="储存目录:", font=self.app_fonts['body_bold'], text_color=self.app_colors['text_primary']).pack(side="left", padx=(0, 8))
+        self.path_entry = ctk.CTkEntry(path_frame, width=300, height=32, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=1, border_color=self.app_colors['btn_secondary'], corner_radius=8, text_color=self.app_colors['text_primary'])
         self.path_entry.pack(side="left", padx=(0, 16))
         self.path_entry.insert(0, config_manager.download_path)
         self.path_entry.bind('<Return>', lambda e: self.manual_path_update())
         
-        ctk.CTkButton(path_frame, text="浏览", width=64, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], hover_color=self.app_colors['btn_secondary_hover'], text_color=self.app_colors['text_primary'], corner_radius=8, command=self.choose_download_path).pack(side="left")
+        ctk.CTkButton(path_frame, text="选择路径", width=64, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['item_default'], hover_color=self.app_colors['item_selected'], text_color=self.app_colors['text_primary'], corner_radius=8, command=self.choose_download_path).pack(side="left")
         
-        ctk.CTkButton(self.frame_a, text="日志", width=80, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], text_color=self.app_colors['text_primary'], hover_color=self.app_colors['btn_secondary_hover'], corner_radius=8, command=self.open_log).grid(row=0, column=1, padx=8, pady=8)
-        ctk.CTkButton(self.frame_a, text="设置", width=80, height=32, font=self.app_fonts['body_bold'], fg_color=self.app_colors['btn_primary'], text_color=self.app_colors['text_on_primary'], hover_color=self.app_colors['btn_primary_hover'], corner_radius=8, command=self.open_settings).grid(row=0, column=2, padx=(8, 16), pady=8)
+        ctk.CTkButton(self.frame_a, text="查看日志", width=80, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['item_default'], text_color=self.app_colors['text_primary'], hover_color=self.app_colors['item_selected'], corner_radius=8, command=self.open_log).grid(row=0, column=1, padx=8, pady=8)
+        ctk.CTkButton(self.frame_a, text="全局设置", width=80, height=32, font=self.app_fonts['body_bold'], fg_color=self.app_colors['btn_primary'], text_color=self.app_colors['text_on_primary'], hover_color=self.app_colors['btn_primary_hover'], corner_radius=8, command=self.open_settings).grid(row=0, column=2, padx=(8, 16), pady=8)
         
         # --- Main Content ---
         # Left: Search
@@ -131,7 +131,7 @@ class DownloaderApp(ctk.CTk):
 
     def choose_download_path(self):
         import tkinter.filedialog as fd
-        path = fd.askdirectory(initialdir=config_manager.download_path, title="选择下载保存路径")
+        path = fd.askdirectory(initialdir=config_manager.download_path, title="选择下载储存路径")
         if path:
             path = os.path.normpath(path)
             self.path_entry.delete(0, 'end')
