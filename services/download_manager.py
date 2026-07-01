@@ -184,6 +184,13 @@ class DownloadManager:
 
     def cancel_task(self, task_id):
         task = self.tasks.get(task_id)
+        if task and task['status'] not in ['下载完成']:
+            task['cancel_flag'] = True
+            task['is_paused'] = True
+            self.update_task_state(task_id, "已取消", task['progress'])
+
+    def remove_task(self, task_id):
+        task = self.tasks.get(task_id)
         if task:
             task['cancel_flag'] = True
             threading.Thread(target=delete_task_state, args=(task, config_manager.download_path), daemon=True).start()
@@ -378,7 +385,9 @@ class DownloadManager:
             task['status'] = '下载完成'
             task['progress'] = 1.0
             
-            save_task_state(task, config_manager.download_path)
+            try:
+                delete_task_state(task, config_manager.download_path)
+            except: pass
             
             try:
                 base_title = re.sub(r'[\\/*?:"<>|]', '_', task['title']).strip()
@@ -397,6 +406,12 @@ class DownloadManager:
                 logger.error(f"Error renaming completed folder: {e}")
                 
             event_bus.emit("TASK_COMPLETED", task['id'])
+            
+            # Promptly remove completed task from UI and active dictionary
+            event_bus.emit("TASK_REMOVED", task['id'])
+            if task['id'] in self.tasks:
+                del self.tasks[task['id']]
+                
             time.sleep(config_manager.comic_rest_time)
         else:
             self.update_task_state(task['id'], f"部分失败 ({downloaded}/{total_imgs})", downloaded/total_imgs)

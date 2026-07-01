@@ -24,29 +24,36 @@ class DownloaderApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        self.color_bg = ("#F3F4F6", "#000000")
-        self.color_frame = ("#FFFFFF", "#1C1C1E")
-        self.color_text_primary = ("#0F172A", "#F1F5F9")
-        self.color_text_secondary = ("#64748B", "#94A3B8")
-        self.color_accent = ("#3B82F6", "#0A84FF")
-        self.color_accent_hover = ("#2563EB", "#007AFF")
-        self.color_item = ("#F8FAFC", "#2C2C2E")
-        self.color_item_selected = ("#EFF6FF", "#3A3A3C")
-        
+        # Color System
         self.app_colors = {
-            'bg': self.color_bg,
-            'frame': self.color_frame,
-            'text_primary': self.color_text_primary,
-            'text_secondary': self.color_text_secondary,
-            'accent': self.color_accent,
-            'accent_hover': self.color_accent_hover,
-            'item': self.color_item,
-            'item_selected': self.color_item_selected
+            'bg': ("#F3F4F6", "#000000"),
+            'frame': ("#FFFFFF", "#1C1C1E"),
+            'item_default': ("#F8FAFC", "#2C2C2E"),
+            'item_selected': ("#DBEAFE", "#1E3A8A"),
+            'item_border_selected': ("#2563EB", "#3B82F6"),
+            'btn_primary': ("#3B82F6", "#0A84FF"),
+            'btn_primary_hover': ("#2563EB", "#007AFF"),
+            'btn_secondary': ("#E5E7EB", "#333333"),
+            'btn_secondary_hover': ("#D1D5DB", "#444444"),
+            'btn_warning': ("#F59E0B", "#D97706"),
+            'btn_disabled': ("#E5E5EA", "#3A3A3C"),
+            'text_primary': ("#0F172A", "#F1F5F9"),
+            'text_secondary': ("#64748B", "#94A3B8"),
+            'text_on_primary': ("#FFFFFF", "#FFFFFF")
+        }
+
+        # Typography System
+        self.app_fonts = {
+            'h1': ("Microsoft YaHei", 24, "bold"),
+            'h2': ("Microsoft YaHei", 16, "bold"),
+            'body_bold': ("Microsoft YaHei", 14, "bold"),
+            'body': ("Microsoft YaHei", 14, "normal"),
+            'small': ("Microsoft YaHei", 12, "normal")
         }
         
         self.title("WNACG Mini Downloader")
-        self.geometry("1100x750")
-        self.configure(fg_color=self.color_bg)
+        self.geometry("950x1000")
+        self.configure(fg_color=self.app_colors['bg'])
         
         icon_path = get_resource_path('icon.ico')
         if os.path.exists(icon_path):
@@ -55,57 +62,61 @@ class DownloaderApp(ctk.CTk):
             
         self.setup_ui()
         self.bind_events()
+        self.bind("<FocusIn>", self.on_focus_in)
         
-        # initial tasks
         self.after(500, download_manager.sync_disk_state)
         update_service.check_for_updates()
 
     def setup_ui(self):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=3)
-        self.grid_columnconfigure(1, weight=2)
+        self.grid_columnconfigure(0, weight=5)
+        self.grid_columnconfigure(1, weight=4)
         
         # --- Top Bar ---
-        self.frame_a = ctk.CTkFrame(self, corner_radius=12, fg_color=self.color_frame)
-        self.frame_a.grid(row=0, column=0, columnspan=2, padx=15, pady=(15, 5), sticky="nsew")
+        self.frame_a = ctk.CTkFrame(self, corner_radius=16, fg_color=self.app_colors['frame'])
+        self.frame_a.grid(row=0, column=0, columnspan=2, padx=24, pady=(24, 8), sticky="nsew")
         self.frame_a.grid_columnconfigure(0, weight=1)
         
         path_frame = ctk.CTkFrame(self.frame_a, fg_color="transparent")
-        path_frame.grid(row=0, column=0, padx=25, pady=15, sticky="w")
+        path_frame.grid(row=0, column=0, padx=16, pady=16, sticky="w")
         
-        ctk.CTkLabel(path_frame, text="下载路径:", font=("Microsoft YaHei", 14, "bold"), text_color=self.color_text_primary).pack(side="left", padx=(0, 10))
-        self.path_entry = ctk.CTkEntry(path_frame, width=280, fg_color=self.color_item, border_width=0, corner_radius=6, text_color=self.color_text_primary)
-        self.path_entry.pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(path_frame, text="保存路径:", font=self.app_fonts['body_bold'], text_color=self.app_colors['text_primary']).pack(side="left", padx=(0, 8))
+        self.path_entry = ctk.CTkEntry(path_frame, width=280, font=self.app_fonts['small'], fg_color=self.app_colors['item_default'], border_width=0, corner_radius=8, text_color=self.app_colors['text_primary'])
+        self.path_entry.pack(side="left", padx=(0, 16))
         self.path_entry.insert(0, config_manager.download_path)
         self.path_entry.bind('<Return>', lambda e: self.manual_path_update())
         
-        ctk.CTkButton(path_frame, text="浏览...", width=60, font=("Microsoft YaHei", 12), fg_color=self.color_item, hover_color=self.color_item_selected, text_color=self.color_text_primary, corner_radius=6, command=self.choose_download_path).pack(side="left")
+        ctk.CTkButton(path_frame, text="浏览...", width=64, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], hover_color=self.app_colors['btn_secondary_hover'], text_color=self.app_colors['text_primary'], corner_radius=8, command=self.choose_download_path).pack(side="left")
         
-        ctk.CTkButton(self.frame_a, text="查看日志", width=90, fg_color=self.color_item, text_color=self.color_text_primary, hover_color=self.color_item_selected, corner_radius=6, command=self.open_log).grid(row=0, column=1, padx=5, pady=15)
-        ctk.CTkButton(self.frame_a, text="全局设置", width=90, fg_color=self.color_accent, hover_color=self.color_accent_hover, corner_radius=6, command=self.open_settings).grid(row=0, column=2, padx=20, pady=15)
+        ctk.CTkButton(self.frame_a, text="查看日志", width=96, height=32, font=self.app_fonts['body'], fg_color=self.app_colors['btn_secondary'], text_color=self.app_colors['text_primary'], hover_color=self.app_colors['btn_secondary_hover'], corner_radius=8, command=self.open_log).grid(row=0, column=1, padx=8, pady=16)
+        ctk.CTkButton(self.frame_a, text="全局设置", width=96, height=32, font=self.app_fonts['body_bold'], fg_color=self.app_colors['btn_primary'], text_color=self.app_colors['text_on_primary'], hover_color=self.app_colors['btn_primary_hover'], corner_radius=8, command=self.open_settings).grid(row=0, column=2, padx=16, pady=16)
         
         # --- Main Content ---
         # Left: Search
-        self.search_panel = SearchPanel(self, self.app_colors)
-        self.search_panel.grid(row=1, column=0, padx=(15, 5), pady=(5, 15), sticky="nsew")
-        self.search_panel.configure(fg_color=self.color_frame, corner_radius=15)
+        self.search_panel = SearchPanel(self, self.app_colors, self.app_fonts)
+        self.search_panel.grid(row=1, column=0, padx=(24, 8), pady=(8, 24), sticky="nsew")
+        self.search_panel.configure(fg_color=self.app_colors['frame'], corner_radius=16)
         
         # Right: Queue
         right_container = ctk.CTkFrame(self, fg_color="transparent")
-        right_container.grid(row=1, column=1, padx=(5, 15), pady=(5, 15), sticky="nsew")
+        right_container.grid(row=1, column=1, padx=(8, 24), pady=(8, 24), sticky="nsew")
         right_container.grid_rowconfigure(0, weight=1)
         right_container.grid_columnconfigure(0, weight=1)
         
-        self.queue_panel = QueuePanel(right_container, self.app_colors)
+        self.queue_panel = QueuePanel(right_container, self.app_colors, self.app_fonts)
         self.queue_panel.grid(row=0, column=0, sticky="nsew")
-        self.queue_panel.configure(fg_color=self.color_frame, corner_radius=15)
+        self.queue_panel.configure(fg_color=self.app_colors['frame'], corner_radius=16)
         
     def bind_events(self):
         event_bus.subscribe("TOAST", self.on_toast)
 
     def on_toast(self, message, type="info"):
         self.after(0, lambda: show_toast(self, message, type))
+
+    def on_focus_in(self, event):
+        if event.widget == self:
+            download_manager.sync_disk_state()
 
     def manual_path_update(self):
         new_path = self.path_entry.get().strip()

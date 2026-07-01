@@ -5,9 +5,10 @@ from services.download_manager import download_manager
 from core.event_bus import event_bus
 
 class QueuePanel(ctk.CTkFrame):
-    def __init__(self, master, app_colors):
-        super().__init__(master, fg_color="transparent")
+    def __init__(self, master, app_colors, app_fonts):
+        super().__init__(master, fg_color=app_colors['frame'], corner_radius=16)
         self.colors = app_colors
+        self.fonts = app_fonts
         
         self.selected_task_ids = set()
         self.last_clicked_task_id = None
@@ -25,13 +26,13 @@ class QueuePanel(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         
         header_frame_c = ctk.CTkFrame(self, fg_color="transparent")
-        header_frame_c.grid(row=0, column=0, pady=(15, 5), padx=20, sticky="ew")
+        header_frame_c.grid(row=0, column=0, pady=(24, 8), padx=24, sticky="ew")
         header_frame_c.grid_columnconfigure(0, weight=1)
         
-        ctk.CTkLabel(header_frame_c, text="任务队列", font=("Microsoft YaHei", 18, "bold"), text_color=self.colors['text_primary']).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(header_frame_c, text="任务队列", font=self.fonts['h2'], text_color=self.colors['text_primary']).grid(row=0, column=0, sticky="w")
         
         self.queue_frame = AutoHideScrollableFrame(self, corner_radius=8, fg_color="transparent", bg_color="transparent")
-        self.queue_frame.grid(row=1, column=0, padx=5, pady=(0, 10), sticky="nsew")
+        self.queue_frame.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
         
         if hasattr(self.queue_frame, '_parent_canvas'):
             self.queue_frame._parent_canvas.bind("<Button-1>", self.on_empty_click)
@@ -49,18 +50,18 @@ class QueuePanel(ctk.CTkFrame):
         self.after(0, lambda: self.remove_task_ui(task_id))
 
     def add_task_to_ui(self, task_data):
-        item_frame = ctk.CTkFrame(self.queue_frame, corner_radius=8, fg_color=self.colors['item'], border_width=0)
-        item_frame.pack(fill="x", padx=2, pady=2)
+        item_frame = ctk.CTkFrame(self.queue_frame, corner_radius=8, fg_color=self.colors['item_default'], border_width=2, border_color=self.colors['bg'])
+        item_frame.pack(fill="x", padx=4, pady=4)
         item_frame.grid_columnconfigure(0, weight=1)
         
-        lbl_title = ctk.CTkLabel(item_frame, text=task_data['title'], font=("Microsoft YaHei", 12, "bold"), text_color=self.colors['text_primary'], anchor="w", justify="left")
-        lbl_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="nw")
+        lbl_title = ctk.CTkLabel(item_frame, text=task_data['title'], font=self.fonts['body_bold'], text_color=self.colors['text_primary'], anchor="w", justify="left")
+        lbl_title.grid(row=0, column=0, padx=8, pady=(8, 0), sticky="nw")
         
-        lbl_status = ctk.CTkLabel(item_frame, text=task_data['status'], font=("Microsoft YaHei", 11), text_color=self.colors['text_secondary'], anchor="w")
-        lbl_status.grid(row=1, column=0, padx=10, pady=0, sticky="nw")
+        lbl_status = ctk.CTkLabel(item_frame, text=task_data['status'], font=self.fonts['small'], text_color=self.colors['text_secondary'], anchor="w")
+        lbl_status.grid(row=1, column=0, padx=8, pady=(4, 0), sticky="nw")
         
-        progressbar = ctk.CTkProgressBar(item_frame, progress_color=self.colors['accent'], fg_color=self.colors['bg'], height=6)
-        progressbar.grid(row=2, column=0, padx=10, pady=(2, 5), sticky="ew")
+        progressbar = ctk.CTkProgressBar(item_frame, progress_color=self.colors['btn_primary'], fg_color=self.colors['bg'], height=6)
+        progressbar.grid(row=2, column=0, padx=8, pady=(4, 8), sticky="ew")
         progressbar.set(task_data.get('progress', 0.0))
         
         self.ui_tasks[task_data['id']] = {
@@ -81,8 +82,8 @@ class QueuePanel(ctk.CTkFrame):
             text_color = ("#FF3B30", "#FF453A")
             pb_color = ("#FF3B30", "#FF453A")
         elif "暂停" in status_text:
-            text_color = ("#FF9500", "#FF9F0A")
-            pb_color = ("#FF9500", "#FF9F0A")
+            text_color = self.colors['btn_warning']
+            pb_color = self.colors['btn_warning']
         elif "解析" in status_text:
             text_color = ("#AF52DE", "#BF5AF2")
             pb_color = ("#AF52DE", "#BF5AF2")
@@ -90,11 +91,11 @@ class QueuePanel(ctk.CTkFrame):
             text_color = ("#34C759", "#30D158")
             pb_color = ("#34C759", "#30D158")
         elif "等待" in status_text:
-            text_color = ("#8E8E93", "#98989D")
-            pb_color = ("#D1D1D6", "#3A3A3C")
+            text_color = self.colors['text_secondary']
+            pb_color = self.colors['btn_secondary']
         else:
-            text_color = self.colors['accent']
-            pb_color = self.colors['accent']
+            text_color = self.colors['btn_primary']
+            pb_color = self.colors['btn_primary']
             
         ui_obj['lbl_status'].configure(text=status_text, text_color=text_color)
         ui_obj['progressbar'].set(progress_val)
@@ -126,7 +127,10 @@ class QueuePanel(ctk.CTkFrame):
         self.update_task_selection_ui()
 
     def _bind_click_recursive(self, widget, task_id):
+        if isinstance(widget, ctk.CTkButton):
+            return
         widget.bind("<Button-1>", lambda e: self.on_task_click(e, task_id))
+        widget.bind("<Double-Button-1>", lambda e: self.on_task_double_click(e, task_id))
         widget.bind("<B1-Motion>", self.on_drag_motion)
         widget.bind("<Button-3>", lambda e: self.on_task_right_click(e, task_id))
         for child in widget.winfo_children():
@@ -192,9 +196,9 @@ class QueuePanel(ctk.CTkFrame):
             frame = ui_obj['frame']
             if not frame.winfo_exists(): continue
             if t_id in self.selected_task_ids:
-                frame.configure(fg_color=self.colors['item_selected'], border_color=self.colors['accent'])
+                frame.configure(fg_color=self.colors['item_selected'], border_color=self.colors['item_border_selected'])
             else:
-                frame.configure(fg_color=self.colors['item'], border_color=self.colors['bg'])
+                frame.configure(fg_color=self.colors['item_default'], border_color=self.colors['bg'])
 
     def clear_task_selection(self):
         self.selected_task_ids.clear()
@@ -211,14 +215,15 @@ class QueuePanel(ctk.CTkFrame):
             self.last_clicked_task_id = task_id
             self.update_task_selection_ui()
             
-        menu = tk.Menu(self, tearoff=0, font=("Microsoft YaHei", 12))
+        menu = tk.Menu(self, tearoff=0, font=("Microsoft YaHei", 11))
         menu.add_command(label="全选队列", command=self.select_all_tasks)
         menu.add_command(label="取消选中", command=self.clear_task_selection)
         menu.add_separator()
         menu.add_command(label="继续下载", command=self.resume_selected_tasks)
         menu.add_command(label="暂停下载", command=self.pause_selected_tasks)
         menu.add_separator()
-        menu.add_command(label="取消并移除", command=self.cancel_selected_tasks)
+        menu.add_command(label="取消任务", command=self.cancel_selected_tasks)
+        menu.add_command(label="移除任务", command=self.remove_selected_tasks)
         
         try:
             menu.tk_popup(event.x_root, event.y_root)
@@ -240,4 +245,16 @@ class QueuePanel(ctk.CTkFrame):
     def cancel_selected_tasks(self):
         for t_id in list(self.selected_task_ids):
             download_manager.cancel_task(t_id)
+
+    def remove_selected_tasks(self):
+        for t_id in list(self.selected_task_ids):
+            download_manager.remove_task(t_id)
         self.selected_task_ids.clear()
+
+    def on_task_double_click(self, event, task_id):
+        task = download_manager.tasks.get(task_id)
+        if task:
+            if task['is_paused']:
+                download_manager.resume_task(task_id)
+            else:
+                download_manager.pause_task(task_id)
